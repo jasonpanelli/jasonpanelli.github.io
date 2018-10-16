@@ -1,0 +1,98 @@
+body
+{
+	background-color: #87ceeb;
+}
+
+h1
+{
+	text-align: center;
+	font-size: 6vh;
+	font-family: 'Press Start 2P', cursive;
+}
+
+img
+{
+	
+	position: absolute;
+	top: 50%;
+	left: 50%;
+}
+
+img.hill
+{
+	max-height: 100%;
+    height: auto;
+	z-index: 1;
+	transform: translate(-50%,-50%);
+	animation: mario1 30s linear infinite;
+}
+
+img.hill2
+{
+	max-height: 100%;
+    height: auto;
+	z-index: 1;
+	transform: translate(-150%,-50%);
+	animation: mario2 30s linear infinite;
+}
+
+img.marioclass
+{
+	max-height: 100%;
+    height: auto;
+	z-index: 2;
+	transform: translate(-50%,-50%);
+	animation: mario1 10s linear infinite;
+}
+
+img.marioclass2
+{
+	max-height: 100%;
+    height: auto;
+	z-index: 2;
+	transform: translate(-150%,-50%);
+	animation: mario2 10s linear infinite;
+}
+
+img.raptorclass
+{
+	max-height: 20%;
+	height: auto;
+	z-index: 3;
+	animation: raptoranim .5s linear infinite;
+
+}
+
+img.mushroom
+{
+	z-index: 2;
+	max-height: 7%;
+	animation: mushroom 14s linear infinite;
+}
+
+@keyframes mushroom
+{
+	0% {transform: translate(5000%, 185%);}
+	100% {transform: translate(-5000%, 185%);}
+}
+
+@keyframes mario1
+{
+	0% {transform: translate(50%,-50%);}
+	100% {transform: translate(-50%,-50%);}
+}
+
+@keyframes mario2
+{
+	0% {transform: translate(-50%, -50%);}
+	100% {transform: translate(-150%, -50%);}
+}
+
+@keyframes raptoranim
+{
+	0% {transform: translate(-50%, -0%) rotate(0deg);}
+	25% {transform: translate(-50%, -5%) rotate(7deg);}
+	50% {transform: translate(-50%, -10%) rotate(0deg);}
+	75% {transform: translate(-50%, -5%) rotate(-7deg);}
+	100% {transform: translate(-50%, -0%);}
+}
