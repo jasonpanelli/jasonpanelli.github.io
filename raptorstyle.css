@@ -1,6 +1,7 @@
 body
 {
 	background-color: #87ceeb;
+	overflow: hidden;
 }
 
 h1
