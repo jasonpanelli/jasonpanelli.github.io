@@ -21,6 +21,7 @@
     <button id="replay">Replay Notes</button> 
     <p>Correct guesses: <span id="correctCount">0</span></p>
     <p>Incorrect guesses: <span id="incorrectCount">0</span></p>
+    <p>For each cents offset: <span id="mapId" style="white-space: pre-wrap">Make guesses to fill this field.</span></p>
 
     <script>
         const playNoteButton = document.getElementById('playNote');
@@ -33,6 +34,7 @@
         const replayButton = document.getElementById('replay');
         const correctCount = document.getElementById('correctCount');
         const incorrectCount = document.getElementById('incorrectCount');
+        const mapId = document.getElementById('mapId');
 
         let audioContext;
         let currentNote = null;
@@ -42,6 +44,8 @@
         let hasGuessed = false; // Flag to track if the user has already guessed for this note
         let consecutiveCorrect = 0;
         let isCorrect = false;
+        let correctMap = new Map();
+        let incorrectMap = new Map();
         const beepDuration = 1.0; 
         const delayBetweenNotes = 500; // Delay in milliseconds (0.25 seconds)
 
@@ -150,10 +154,44 @@
                         var newCentsOffset = document.getElementById('centsInput').value * (1.0 - (document.getElementById('decreaseAmount').value / 100.0));
                         centsInput.value = newCentsOffset;
                     }
+                    if (correctMap.get(centsInput.value) === undefined) {
+                        correctMap.set(centsInput.value, 1);
+                    } else {
+                        correctMap.set(centsInput.value, correctMap.get(centsInput.value) + 1);
+                    }
                 } else {
                     consecutiveCorrect = 0;
+                    if (incorrectMap.get(centsInput.value) === undefined) {
+                        incorrectMap.set(centsInput.value, 1);
+                    } else {
+                        incorrectMap.set(centsInput.value, incorrectMap.get(centsInput.value) + 1);
+                    }
                 }
-                console.log(consecutiveCorrect);
+                console.log(correctMap);
+                console.log(incorrectMap);
+                let text = "";
+                for (let [key, value] of correctMap) {
+                    text += "\n\n\tCorrect for " + key + " cents: " + value;
+                    let incorrect = 0;
+                    if (incorrectMap.get(key) === undefined) {
+                        incorrect = 0;
+                    } else {
+                        incorrect = incorrectMap.get(key);
+                    }
+                    text += "\n\tIncorrect for " + key + " cents: " + incorrect;
+                    text += "\n\t\tPercentage: " + 100.0 * ((1.0*value) / (value + incorrect)) + "%";
+                }
+                for (let [key, value] of incorrectMap) {
+                    if (correctMap.get(key) === undefined) {
+                        text += "\n\n\tCorrect for " + key + " cents: 0";
+                        text += "\n\tIncorrect for " + key + " cents: " + value;
+                        text += "\n\t\tPercentage: 0%";
+                    }
+                }
+                console.log(text);
+                mapId.textContent = text;
+                console.log(mapId);
+                console.log(mapId.textContent);
             } else {
                 if (isSame) {
                     feedback.textContent = "You've already guessed for this note. Try again or get a new note. The answer was Same.";
