@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Random Musical Note Player</title>
+    <style>
+    </style>
+</head>
+<body>
+    <label for="centsInput">Cents Offset:</label>
+    <input type="number" id="centsInput" value="100"><br>
+    <label for="decreaseEvery">Decrease cents offset every x consecutive guesses:</label>
+    <input type="number" id="decreaseEvery" value="10"><br>
+    <label for="decreaseAmount">Decrease percentage:</label>
+    <input type="number" id="decreaseAmount" value="0"><br>
+    <button id="playNote">Play Current Note</button>
+    <button id="newNote">New Note</button> 
+    <button id="higher">Higher</button>
+    <button id="same">Same</button>
+    <button id="lower">Lower</button>
+    <p id="feedback"></p>
+    <button id="replay">Replay Notes</button> 
+    <p>Correct guesses: <span id="correctCount">0</span></p>
+    <p>Incorrect guesses: <span id="incorrectCount">0</span></p>
+
+    <script>
+        const playNoteButton = document.getElementById('playNote');
+        const newNoteButton = document.getElementById('newNote');
+        const centsInput = document.getElementById('centsInput');
+        const higherButton = document.getElementById('higher');
+        const sameButton = document.getElementById('same');
+        const lowerButton = document.getElementById('lower');
+        const feedback = document.getElementById('feedback');
+        const replayButton = document.getElementById('replay');
+        const correctCount = document.getElementById('correctCount');
+        const incorrectCount = document.getElementById('incorrectCount');
+
+        let audioContext;
+        let currentNote = null;
+        let isHigher = null; 
+        let correctGuesses = 0;
+        let incorrectGuesses = 0;
+        let hasGuessed = false; // Flag to track if the user has already guessed for this note
+        let consecutiveCorrect = 0;
+        let isCorrect = false;
+        const beepDuration = 1.0; 
+        const delayBetweenNotes = 500; // Delay in milliseconds (0.25 seconds)
+
+        function generateNewNote() {
+            feedback.textContent += " New note generated.";
+            const minFreq = 140; 
+            const maxFreq = 587.33; 
+            currentNote = Math.random() * (maxFreq - minFreq) + minFreq;
+            isSame = Math.random() < 0.3333;
+            isHigher = Math.random() < 0.5; 
+            hasGuessed = false; // Reset the guess flag for the new note
+        }
+
+        playNoteButton.addEventListener('click', () => {
+            if (!audioContext) {
+                audioContext = new AudioContext();
+            }
+            if (!currentNote) {
+                generateNewNote();
+            }
+
+            playBeep(currentNote);
+
+            setTimeout(() => {
+                centsOffset = parseFloat(centsInput.value) * (isHigher ? 1 : -1);
+                if (isSame) {
+                    centsOffset = 0;
+                }
+                const playbackRate = Math.pow(2, centsOffset / 1200);
+                playBeep(currentNote * playbackRate);
+            }, delayBetweenNotes); 
+
+            replayButton.disabled = false; // Enable replay button
+        });
+
+        newNoteButton.addEventListener('click', generateNewNote);
+
+        higherButton.addEventListener('click', () => checkGuess(true, false));
+        sameButton.addEventListener('click', () => checkGuess(false, true));
+        lowerButton.addEventListener('click', () => checkGuess(false, false));
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === "h") {
+                playNoteButton.click();
+            }
+            if (event.key === "n") {
+                generateNewNote();
+            }
+            if (event.key === "j") {
+                checkGuess(true, false);
+            }
+            if (event.key === "k") {
+                checkGuess(false, true);
+            }
+            if (event.key === "l") {
+                checkGuess(false, false);
+            }
+        });
+
+
+        replayButton.addEventListener('click', () => {
+            playNoteButton.click(); 
+        });
+
+        function checkGuess(userGuessIsHigher, userGuessIsSame) {
+            if (!hasGuessed) { // Only proceed if the user hasn't guessed yet
+                feedback.textContent = "Your guess was ";
+                if (userGuessIsSame) {
+                    feedback.textContent += "Same.\n";
+                } else if (userGuessIsHigher) {
+                    feedback.textContent += "Higher.\n";
+                } else {
+                    feedback.textContent += "Lower.\n";
+                }
+                if (isSame && userGuessIsSame){
+                    isCorrect = true;
+                    feedback.textContent += "Correct!\n";
+                    correctGuesses++;
+                    correctCount.textContent = correctGuesses;
+                    generateNewNote();
+                    replayButton.disabled = true;
+                } else if (!isSame && !userGuessIsSame && userGuessIsHigher === isHigher) {
+                    isCorrect = true;
+                    feedback.textContent += "Correct!\n";
+                    correctGuesses++;
+                    correctCount.textContent = correctGuesses;
+                    generateNewNote();
+                    replayButton.disabled = true;
+                } else {
+                    isCorrect = false;
+                    if (isSame) {
+                        feedback.textContent += "Incorrect! Try again or get a new note. The answer was Same.";
+                    } else if (isHigher) {
+                        feedback.textContent += "Incorrect! Try again or get a new note. The answer was Higher.";
+                    } else {
+                        feedback.textContent += "Incorrect! Try again or get a new note. The answer was Lower.";
+                    }
+                    incorrectGuesses++;
+                    incorrectCount.textContent = incorrectGuesses;
+                    hasGuessed = true; // Mark the guess as made for this note
+                }
+                if (isCorrect) {
+                    consecutiveCorrect++;
+                    if (consecutiveCorrect >= document.getElementById('decreaseEvery').value) {
+                        consecutiveCorrect = 0;
+                        var newCentsOffset = document.getElementById('centsInput').value * (1.0 - (document.getElementById('decreaseAmount').value / 100.0));
+                        centsInput.value = newCentsOffset;
+                    }
+                } else {
+                    consecutiveCorrect = 0;
+                }
+                console.log(consecutiveCorrect);
+            } else {
+                if (isSame) {
+                    feedback.textContent = "You've already guessed for this note. Try again or get a new note. The answer was Same.";
+                } else if (isHigher) {
+                    feedback.textContent = "You've already guessed for this note. Try again or get a new note. The answer was Higher.";
+                } else {
+                    feedback.textContent = "You've already guessed for this note. Try again or get a new note. The answer was Lower.";
+                }
+            }
+        }
+
+        function playBeep(frequency) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.01); 
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + beepDuration);
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + beepDuration); 
+        }      </script>
+</body>
+</html>
