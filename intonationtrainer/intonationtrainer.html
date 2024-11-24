@@ -12,11 +12,11 @@
     <input type="number" id="decreaseEvery" value="10"><br>
     <label for="decreaseAmount">Decrease percentage:</label>
     <input type="number" id="decreaseAmount" value="0"><br>
-    <button id="playNote">Play Current Note</button>
-    <button id="newNote">New Note</button> 
-    <button id="higher">Higher</button>
-    <button id="same">Same</button>
-    <button id="lower">Lower</button>
+    <button id="playNote">Play Current Note</button><br><br>
+    <button id="newNote">New Note</button><br><br>
+    <button id="higher">Higher</button><br><br>
+    <button id="same">Same</button><br><br>
+    <button id="lower">Lower</button><br><br>
     <p id="feedback"></p>
     <button id="replay">Replay Notes</button> 
     <p>Correct guesses: <span id="correctCount">0</span></p>
@@ -46,8 +46,8 @@
         let isCorrect = false;
         let correctMap = new Map();
         let incorrectMap = new Map();
-        const beepDuration = 1.0; 
-        const delayBetweenNotes = 500; // Delay in milliseconds (0.25 seconds)
+        const beepDuration = 1.2; 
+        const delayBetweenNotes = 500; // Delay in milliseconds (0.5 seconds)
 
         function generateNewNote() {
             feedback.textContent += " New note generated.";
@@ -152,8 +152,29 @@
                     if (consecutiveCorrect >= document.getElementById('decreaseEvery').value) {
                         consecutiveCorrect = 0;
                         var newCentsOffset = document.getElementById('centsInput').value * (1.0 - (document.getElementById('decreaseAmount').value / 100.0));
+                        newCentsOffset = Math.trunc(newCentsOffset);
                         centsInput.value = newCentsOffset;
                     }
+                    if (0 > document.getElementById('decreaseEvery').value) {
+                        var totalCount = correctGuesses + incorrectGuesses;
+                        var bonus = 0;
+                        if (totalCount < 20) {
+                            bonus = 20 - totalCount;
+                        }
+                        console.log(correctCount);
+                        console.log(incorrectCount);
+                        var percentCorrect = correctGuesses / (correctGuesses + incorrectGuesses);
+                        console.log(percentCorrect)
+                        var newCentsOffset = centsInput.value;
+                        if (percentCorrect > 0.8) {
+                            newCentsOffset = document.getElementById('centsInput').value * ((99 - (bonus/2)) / 100.0);
+                        } else {
+                            newCentsOffset = document.getElementById('centsInput').value * ((101 + (bonus/2)) / 100.0);
+                        }
+                        console.log(newCentsOffset);
+                        centsInput.value = newCentsOffset;
+                    }
+
                     if (correctMap.get(centsInput.value) === undefined) {
                         correctMap.set(centsInput.value, 1);
                     } else {
@@ -167,8 +188,6 @@
                         incorrectMap.set(centsInput.value, incorrectMap.get(centsInput.value) + 1);
                     }
                 }
-                console.log(correctMap);
-                console.log(incorrectMap);
                 let text = "";
                 for (let [key, value] of correctMap) {
                     text += "\n\n\tCorrect for " + key + " cents: " + value;
@@ -188,10 +207,7 @@
                         text += "\n\t\tPercentage: 0%";
                     }
                 }
-                console.log(text);
                 mapId.textContent = text;
-                console.log(mapId);
-                console.log(mapId.textContent);
             } else {
                 if (isSame) {
                     feedback.textContent = "You've already guessed for this note. Try again or get a new note. The answer was Same.";
