@@ -2,28 +2,28 @@
 const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_DC60RQqwPQLX87O4FQ_jPjsjTLL4v_1vAp8AdiH0Eu7TA0FlE25WUYGFX8qikGM1QA/exec"; 
 
 const INTERVALS = ["m2", "M2", "m3", "M3", "P4", "Tritone", "P5", "m6", "M6", "m7", "M7", "Octave"];
-const PROGRESSIONS = {
-    "I - IV - V - I": [[0,4,7], [5,9,12], [7,11,14], [0,4,7]],
-    "i - iv - V - i": [[0,3,7], [5,8,12], [7,11,14], [0,3,7]],
-    "ii - V - I": [[2,5,9,12], [7,11,14,17], [0,4,7,11]], 
-    "I - V - vi - IV": [[0,4,7], [7,11,14], [9,12,16], [5,9,12]],
-    "vi - IV - I - V": [[9,12,16], [5,9,12], [0,4,7], [7,11,14]]
-};
+// --- CONFIGURATION ---
+const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_DC60RQqwPQLX87O4FQ_jPjsjTLL4v_1vAp8AdiH0Eu7TA0FlE25WUYGFX8qikGM1QA/exec"; 
+
+const INTERVALS = ["m2", "M2", "m3", "M3", "P4", "Tritone", "P5", "m6", "M6", "m7", "M7", "Octave"];
+
+// The individual chords the user can be tested on
+const TARGET_CHORDS = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°', 'i', 'ii°', 'III', 'iv', 'VI'];
 
 // --- STATE ---
 let isPianoLoaded = false;
 let currentQuestion = null; 
-let playbackData = null; // Stores notes to replay the same question
+let playbackData = null;
 let startTime = 0;
 let currentMode = 'direct'; 
 
-// Load Preferences or Defaults
 // Load Preferences or Defaults
 let savedSettings = JSON.parse(localStorage.getItem('harmonySettings')) || {};
 
 let activeSettings = {
     intervals: savedSettings.intervals || [...INTERVALS],
-    progressions: savedSettings.progressions || Object.keys(PROGRESSIONS),
+    // Change 'progressions' to 'targetChords'
+    targetChords: savedSettings.targetChords || ['I', 'ii', 'IV', 'V', 'vi', 'i', 'iv', 'VI'], 
     speed: savedSettings.speed || 1.0
 };
 
@@ -193,19 +193,22 @@ function buildGrids() {
         });
     });
 
+    // Update the 3rd grid to show individual target chords
     const progGrid = document.getElementById('grid-progressions');
     progGrid.innerHTML = '';
-    activeSettings.progressions.forEach(prog => {
+    activeSettings.targetChords.forEach(chord => {
         const btn = document.createElement('button');
         btn.className = 'answer-btn';
-        btn.innerText = prog;
-        btn.onclick = () => handleAnswer(prog, 'grid-progressions');
+        btn.innerText = chord;
+        // Use the old grid ID to avoid having to change your HTML/CSS
+        btn.onclick = () => handleAnswer(chord, 'grid-progressions'); 
         progGrid.appendChild(btn);
     });
 }
 
 function buildSettings() {
     const intContainer = document.getElementById('settings-intervals');
+    intContainer.innerHTML = ''; // Clear existing
     INTERVALS.forEach(int => {
         const lbl = document.createElement('label');
         lbl.className = 'setting-label';
@@ -219,15 +222,17 @@ function buildSettings() {
     });
 
     const progContainer = document.getElementById('settings-progressions');
-    Object.keys(PROGRESSIONS).forEach(prog => {
+    progContainer.innerHTML = ''; // Clear existing
+    TARGET_CHORDS.forEach(chord => {
         const lbl = document.createElement('label');
         lbl.className = 'setting-label';
         const cb = document.createElement('input');
         cb.type = 'checkbox';
-        cb.checked = activeSettings.progressions.includes(prog);
-        cb.onchange = (e) => updateSettings('progressions', prog, e.target.checked);
+        // Check our new state variable
+        cb.checked = activeSettings.targetChords.includes(chord);
+        cb.onchange = (e) => updateSettings('targetChords', chord, e.target.checked);
         lbl.appendChild(cb);
-        lbl.append(prog);
+        lbl.append(chord);
         progContainer.appendChild(lbl);
     });
 
@@ -316,59 +321,63 @@ document.getElementById('play-major').onclick = () => playContext('Major');
 document.getElementById('play-minor').onclick = () => playContext('Minor');
 
 // 3. Progressions
+// 3. Chords in Context (Formerly Progressions)
 document.getElementById('play-progression').onclick = async () => {
-    await initAudio(); // Ensure context is running
+    await initAudio(); 
+    if (activeSettings.targetChords.length === 0) return alert("Enable chords in Settings!");
     
     const now = Tone.now();
     const t = 1 / activeSettings.speed;
     
-    // 1. Pick a random Root Note for the key (MIDI 48 to 55: C3 to G3 makes a good bass foundation)
-    const rootMidi = Math.floor(Math.random() * 8) + 48;
+    // Filter available chords based on user settings
+    const availableMajor = Object.keys(KEY_CHORDS.major).filter(c => activeSettings.targetChords.includes(c));
+    const availableMinor = Object.keys(KEY_CHORDS.minor).filter(c => activeSettings.targetChords.includes(c));
     
-    // 2. Decide if the key is Major or Minor
-    const isMajor = Math.random() > 0.5;
+    if (availableMajor.length === 0 && availableMinor.length === 0) {
+        return alert("No valid chords selected for the current mode! Check your settings.");
+    }
+
+    // Decide Major or Minor based on what the user has enabled
+    let isMajor = true;
+    if (availableMajor.length > 0 && availableMinor.length > 0) {
+        isMajor = Math.random() > 0.5;
+    } else if (availableMinor.length > 0) {
+        isMajor = false;
+    }
+    
     const mode = isMajor ? 'major' : 'minor';
     const chordDict = KEY_CHORDS[mode];
+    const availableChords = isMajor ? availableMajor : availableMinor;
     
-    // 3. Build the Cadence 
+    const rootMidi = Math.floor(Math.random() * 8) + 48; // C3 to G3
+    
+    // Build Cadence
     const cadenceNumerals = isMajor ? ['I', 'IV', 'V', 'I'] : ['i', 'iv', 'V', 'i'];
-    
-    // Map numerals to absolute MIDI, invert them randomly, and convert to Tone.js notes
     const cadenceChords = cadenceNumerals.map(numeral => {
         const baseMidi = chordDict[numeral].map(offset => rootMidi + offset);
         return midiToNotes(invertChord(baseMidi));
     });
 
-    // 4. Pick a random Target Chord from the key
-    const allNumerals = Object.keys(chordDict);
-    const randomTargetNumeral = allNumerals[Math.floor(Math.random() * allNumerals.length)];
+    // Pick a Target Chord from the user's enabled settings
+    const randomTargetNumeral = availableChords[Math.floor(Math.random() * availableChords.length)];
     const targetBaseMidi = chordDict[randomTargetNumeral].map(offset => rootMidi + offset);
-    
-    // We add 12 to the target chord to play it one octave higher than the cadence bass
     const targetChord = midiToNotes(invertChord(targetBaseMidi.map(note => note + 12)));
 
+    // IMPORTANT: Set the question so the UI handles the score correctly!
+    currentQuestion = { answer: randomTargetNumeral, mode: 'ChordInKey', context: mode };
+
     // --- PLAYBACK ---
-    
-    // Play Cadence (each chord lasts 1 beat)
     let timeOffset = 0;
     cadenceChords.forEach(chordNotes => {
         piano.triggerAttackRelease(chordNotes, 1 * t, now + timeOffset);
         timeOffset += (1 * t);
     });
     
-    // Pause for 1 beat after the cadence completes
-    timeOffset += (1 * t);
-    
-    // Play Target Chord (lasts 2.5 beats so it rings out)
+    timeOffset += (1 * t); // Pause for 1 beat
     piano.triggerAttackRelease(targetChord, 2.5 * t, now + timeOffset);
     
-    // For your debugging/answer-checking later:
-    console.log(`Key: ${Tone.Frequency(rootMidi, "midi").toNote().replace(/[0-9]/g, '')} ${mode}`);
-    console.log(`Target Chord: ${randomTargetNumeral}`, targetChord);
-    
-    // You will need to update your UI grid to display the Roman Numerals 
-    // instead of specific intervals/progressions for this mode.
-    // prepAnswer('status-progression', 'grid-progression', (timeOffset + 2.5) * 1000 * t);
+    // Pass 'status-progressions' and 'grid-progressions' to use your existing UI containers
+    prepAnswer('status-progressions', 'grid-progressions', (timeOffset + 2.5) * 1000 * t);
 };
 
 // --- ANSWER HANDLING ---
