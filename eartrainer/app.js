@@ -19,10 +19,13 @@ let startTime = 0;
 let currentMode = 'direct'; 
 
 // Load Preferences or Defaults
-let activeSettings = JSON.parse(localStorage.getItem('harmonySettings')) || {
-    intervals: [...INTERVALS],
-    progressions: Object.keys(PROGRESSIONS),
-    speed: 1.0
+// Load Preferences or Defaults
+let savedSettings = JSON.parse(localStorage.getItem('harmonySettings')) || {};
+
+let activeSettings = {
+    intervals: savedSettings.intervals || [...INTERVALS],
+    progressions: savedSettings.progressions || Object.keys(PROGRESSIONS),
+    speed: savedSettings.speed || 1.0
 };
 
 // --- AUDIO ENGINE (PIANO SAMPLER) ---
@@ -50,6 +53,7 @@ Tone.loaded().then(() => {
 async function initAudio() {
     if (Tone.context.state !== 'running') {
         await Tone.start();
+        console.log("Audio Context Started");
     }
 }
 
@@ -165,10 +169,10 @@ document.getElementById('play-direct').onclick = async () => {
         currentQuestion = { answer: intervalStr, mode: 'Direct', context: 'None' };
         playbackData = { note1: midiToNote(rootMidi), note2: midiToNote(rootMidi + intervalSemitones) };
     }
+    const now = Tone.now(); // Get the time AFTER initAudio
+    const t = 1 / activeSettings.speed; 
     
-    const now = Tone.now();
-    const t = 1 / activeSettings.speed; // Speed multiplier (e.g. 2.0x = half the delay)
-    
+    // Use the 'now' variable consistently
     piano.triggerAttackRelease(playbackData.note1, 1 * t, now);
     piano.triggerAttackRelease(playbackData.note2, 1 * t, now + (1 * t));
     
