@@ -10,8 +10,8 @@ const TARGET_CHORDS = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°', 'i', 'ii°', 
 let isPianoLoaded = false;
 let currentQuestion = null; 
 let playbackData = null;
-let lastPlaybackData = null;   // Stores the last played notes for replay
-let lastQuestionDetails = null; // Stores the last question's root and answer
+let lastPlaybackData = null;   
+let lastQuestionDetails = null; 
 let startTime = 0;
 let currentMode = 'direct'; 
 
@@ -25,7 +25,8 @@ let savedSettings = JSON.parse(localStorage.getItem('harmonySettings')) || {};
 let activeSettings = {
     intervals: savedSettings.intervals || [...INTERVALS],
     targetChords: savedSettings.targetChords || ['I', 'ii', 'IV', 'V', 'vi', 'i', 'iv', 'VI'], 
-    speed: savedSettings.speed || 1.0
+    speed: savedSettings.speed || 1.0,
+    direction: savedSettings.direction || 'Ascending'
 };
 
 // Map every available note in the Tone.js Salamander repository
@@ -73,27 +74,24 @@ function midiToNote(midi) {
     return `${notes[midi % 12]}${Math.floor(midi / 12) - 1}`;
 }
 
-// Converts an array of MIDI numbers to Tone.js note strings
 function midiToNotes(midiArray) {
     return midiArray.map(midi => Tone.Frequency(midi, "midi").toNote());
 }
 
-// Applies a random inversion (Root position, 1st, or 2nd inversion)
 function invertChord(midiArray) {
     let chord = [...midiArray];
-    const inversion = Math.floor(Math.random() * 3); // 0, 1, or 2
+    const inversion = Math.floor(Math.random() * 3); 
     
     if (inversion === 1) {
-        chord[0] += 12; // 1st Inversion
+        chord[0] += 12; 
     } else if (inversion === 2) {
         chord[0] += 12; 
-        chord[1] += 12; // 2nd Inversion
+        chord[1] += 12; 
     }
     
     return chord.sort((a, b) => a - b);
 }
 
-// Define diatonic chord formulas (semi-tone offsets from the root of the key)
 const KEY_CHORDS = {
     major: {
         'I': [0, 4, 7], 'ii': [2, 5, 9], 'iii': [4, 7, 11],
@@ -140,7 +138,6 @@ function updateSessionTracker(isCorrect) {
     document.getElementById('session-right').innerText = `${sessionCorrect} ✓`;
     document.getElementById('session-wrong').innerText = `${wrong} ✗`;
     
-    // Pop animation
     const tracker = document.getElementById('session-tracker');
     tracker.style.transform = 'scale(1.1)';
     setTimeout(() => tracker.style.transform = 'scale(1)', 150);
@@ -198,6 +195,43 @@ function buildSettings() {
         intContainer.appendChild(lbl);
     });
 
+    let dirContainer = document.getElementById('settings-direction-container');
+    if (!dirContainer) {
+        dirContainer = document.createElement('div');
+        dirContainer.id = 'settings-direction-container';
+        dirContainer.style.marginTop = '20px';
+        dirContainer.style.paddingTop = '15px';
+        dirContainer.style.borderTop = '1px solid #374151';
+
+        dirContainer.innerHTML = `<h3 style="margin-bottom: 10px; font-size: 1.1em; color: #9ca3af;">Interval Direction</h3>`;
+
+        const dirSelect = document.createElement('select');
+        dirSelect.style.padding = '8px';
+        dirSelect.style.borderRadius = '5px';
+        dirSelect.style.background = '#374151';
+        dirSelect.style.color = 'white';
+        dirSelect.style.border = 'none';
+        dirSelect.style.width = '100%';
+        dirSelect.style.maxWidth = '250px';
+
+        ['Ascending', 'Descending', 'Harmonic', 'Random'].forEach(dir => {
+            const opt = document.createElement('option');
+            opt.value = dir;
+            opt.innerText = dir === 'Harmonic' ? 'Harmonic (Played Together)' : dir;
+            dirSelect.appendChild(opt);
+        });
+
+        dirSelect.value = activeSettings.direction || 'Ascending';
+        dirSelect.onchange = (e) => {
+            activeSettings.direction = e.target.value;
+            localStorage.setItem('harmonySettings', JSON.stringify(activeSettings));
+            currentQuestion = null;
+        };
+
+        dirContainer.appendChild(dirSelect);
+        intContainer.parentNode.insertBefore(dirContainer, intContainer.nextSibling);
+    }
+
     const progContainer = document.getElementById('settings-progressions');
     progContainer.innerHTML = ''; 
     TARGET_CHORDS.forEach(chord => {
@@ -237,7 +271,6 @@ function updateSettings(category, item, isChecked) {
 
 // --- PLAYBACK LOGIC ---
 
-// 1. Direct Intervals
 document.getElementById('play-direct').onclick = async () => {
     await initAudio();
     if (activeSettings.intervals.length === 0) return alert("Enable intervals in Settings!");
@@ -246,17 +279,45 @@ document.getElementById('play-direct').onclick = async () => {
         const rootMidi = Math.floor(Math.random() * 12) + 60; // C4 to B4
         const intervalStr = activeSettings.intervals[Math.floor(Math.random() * activeSettings.intervals.length)];
         const intervalSemitones = INTERVALS.indexOf(intervalStr) + 1; 
+
+        let dir = activeSettings.direction || 'Ascending';
+        if (dir === 'Random') {
+            dir = Math.random() > 0.5 ? 'Ascending' : 'Descending';
+        }
+
+        let note2Midi;
+        if (dir === 'Descending') {
+            note2Midi = rootMidi - intervalSemitones;
+        } else {
+            note2Midi = rootMidi + intervalSemitones;
+        }
         
-        currentQuestion = { answer: intervalStr, mode: 'Direct', context: 'None', rootMidi: rootMidi };
-        playbackData = { note1: midiToNote(rootMidi), note2: midiToNote(rootMidi + intervalSemitones) };
+        currentQuestion = { 
+            answer: intervalStr, 
+            mode: 'Direct', 
+            context: 'None', 
+            rootMidi: rootMidi,
+            direction: dir 
+        };
+        
+        playbackData = { 
+            note1: midiToNote(rootMidi), 
+            note2: midiToNote(note2Midi),
+            isHarmonic: dir === 'Harmonic'
+        };
     }
+    
     const now = Tone.now(); 
     const t = 1 / activeSettings.speed; 
     
-    piano.triggerAttackRelease(playbackData.note1, 1 * t, now);
-    piano.triggerAttackRelease(playbackData.note2, 1 * t, now + (1 * t));
+    if (playbackData.isHarmonic) {
+        piano.triggerAttackRelease([playbackData.note1, playbackData.note2], 1.5 * t, now);
+    } else {
+        piano.triggerAttackRelease(playbackData.note1, 1 * t, now);
+        piano.triggerAttackRelease(playbackData.note2, 1 * t, now + (1 * t));
+    }
     
-    prepAnswer('status-direct', 'grid-direct', 1500 * t);
+    prepAnswer('status-direct', 'grid-direct', playbackData.isHarmonic ? 1500 * t : 2000 * t);
 };
 
 // 2. Context Intervals
@@ -265,16 +326,24 @@ const playContext = async (contextType) => {
     if (activeSettings.intervals.length === 0) return alert("Enable intervals in Settings!");
 
     if (!currentQuestion || currentQuestion.mode !== 'Context' || currentQuestion.context !== contextType) {
-        const rootMidi = Math.floor(Math.random() * 12) + 60;
+        const rootMidi = Math.floor(Math.random() * 12) + 60; // C4 to B4
         const intervalStr = activeSettings.intervals[Math.floor(Math.random() * activeSettings.intervals.length)];
         const intervalSemitones = INTERVALS.indexOf(intervalStr) + 1;
+        
+        // --- NEW: Random Octave Offset ---
+        // Math.random() * 3 gives 0, 1, or 2. We subtract 1 to get: -1, 0, or +1.
+        // Multiply by 12 to shift by -1 octave, 0 octaves, or +1 octave.
+        const octaveOffset = (Math.floor(Math.random() * 3) - 1) * 12;
+        const targetMidi = rootMidi + intervalSemitones + octaveOffset;
+        // ---------------------------------
         
         currentQuestion = { answer: intervalStr, mode: 'Context', context: contextType, rootMidi: rootMidi };
         
         const chords = contextType === 'Major' ? [[0,4,7], [5,9,12], [7,11,14], [0,4,7]] : [[0,3,7], [5,8,12], [7,11,14], [0,3,7]];
         const chordsNotes = chords.map(chord => chord.map(semi => midiToNote(rootMidi + semi)));
         
-        playbackData = { chords: chordsNotes, target: midiToNote(rootMidi + intervalSemitones) };
+        // Pass the new randomized targetMidi into the playback data
+        playbackData = { chords: chordsNotes, target: midiToNote(targetMidi) };
     }
     
     const now = Tone.now();
@@ -288,10 +357,10 @@ const playContext = async (contextType) => {
     piano.triggerAttackRelease(playbackData.target, 1.5 * t, now + (3.5 * t));
     prepAnswer('status-context', 'grid-context', 4000 * t);
 };
+
 document.getElementById('play-major').onclick = () => playContext('Major');
 document.getElementById('play-minor').onclick = () => playContext('Minor');
 
-// 3. Chords in Context
 document.getElementById('play-progression').onclick = async () => {
     await initAudio(); 
     if (activeSettings.targetChords.length === 0) return alert("Enable chords in Settings!");
@@ -352,8 +421,12 @@ async function replayLastQuestion() {
     const t = 1 / activeSettings.speed;
 
     if (lastQuestionDetails.mode === 'Direct') {
-        piano.triggerAttackRelease(lastPlaybackData.note1, 1 * t, now);
-        piano.triggerAttackRelease(lastPlaybackData.note2, 1 * t, now + (1 * t));
+        if (lastPlaybackData.isHarmonic) {
+            piano.triggerAttackRelease([lastPlaybackData.note1, lastPlaybackData.note2], 1.5 * t, now);
+        } else {
+            piano.triggerAttackRelease(lastPlaybackData.note1, 1 * t, now);
+            piano.triggerAttackRelease(lastPlaybackData.note2, 1 * t, now + (1 * t));
+        }
     } else if (lastQuestionDetails.mode === 'Context') {
         lastPlaybackData.chords.forEach((chordNotes, index) => {
             const duration = index === 3 ? 1.5 * t : 0.8 * t;
@@ -371,21 +444,25 @@ async function replayLastQuestion() {
     }
 }
 
-async function playAllIntervals() {
+async function playReviewInterval(semitones) {
     if (!lastQuestionDetails || !lastQuestionDetails.rootMidi) return;
     await initAudio();
     
     const now = Tone.now();
     const t = 1 / activeSettings.speed;
     const rootMidi = lastQuestionDetails.rootMidi;
+    const dir = lastQuestionDetails.direction || 'Ascending';
 
-    let timeOffset = 0;
-    piano.triggerAttackRelease(midiToNote(rootMidi), 1.5 * t, now);
-    timeOffset += (1.5 * t);
+    let targetMidi = rootMidi + semitones;
+    if (dir === 'Descending') {
+        targetMidi = rootMidi - semitones;
+    }
 
-    for (let i = 1; i <= 12; i++) {
-        piano.triggerAttackRelease(midiToNote(rootMidi + i), 0.5 * t, now + timeOffset);
-        timeOffset += (0.5 * t);
+    if (dir === 'Harmonic') {
+        piano.triggerAttackRelease([midiToNote(rootMidi), midiToNote(targetMidi)], 1.5 * t, now);
+    } else {
+        piano.triggerAttackRelease(midiToNote(rootMidi), 1 * t, now);
+        piano.triggerAttackRelease(midiToNote(targetMidi), 1.5 * t, now + (1 * t));
     }
 }
 
@@ -419,44 +496,111 @@ function handleAnswer(selected, gridId) {
 
     const statusMap = { 'grid-direct': 'status-direct', 'grid-context': 'status-context', 'grid-progressions': 'status-progressions' };
     const statusContainer = document.getElementById(statusMap[gridId]);
-    statusContainer.innerHTML = ''; // Clear existing text
+    statusContainer.innerHTML = ''; 
     
     const msgText = document.createElement('div');
     msgText.innerText = isCorrect ? "Correct!" : `Incorrect. It was ${currentQuestion.answer}.`;
     statusContainer.appendChild(msgText);
 
-    // Save data for the replay buttons
     lastPlaybackData = playbackData;
     lastQuestionDetails = currentQuestion;
 
-    // Build the review buttons dynamically
-    const reviewDiv = document.createElement('div');
-    reviewDiv.style.marginTop = '15px';
-    reviewDiv.style.display = 'flex';
-    reviewDiv.style.gap = '10px';
-    reviewDiv.style.justifyContent = 'center';
+    const reviewContainer = document.createElement('div');
+    reviewContainer.style.marginTop = '15px';
+    reviewContainer.style.display = 'flex';
+    reviewContainer.style.flexDirection = 'column';
+    reviewContainer.style.alignItems = 'center';
+    reviewContainer.style.gap = '15px';
 
     const replayBtn = document.createElement('button');
-    replayBtn.innerText = "🔊 Hear Again";
-    replayBtn.style.padding = '8px 12px';
+    replayBtn.innerText = "🔊 Hear Question Again";
+    replayBtn.style.padding = '8px 16px';
     replayBtn.style.cursor = 'pointer';
+    replayBtn.style.backgroundColor = '#4f46e5';
+    replayBtn.style.color = 'white';
+    replayBtn.style.border = 'none';
+    replayBtn.style.borderRadius = '5px';
     replayBtn.onclick = replayLastQuestion;
+    reviewContainer.appendChild(replayBtn);
 
-    const playScaleBtn = document.createElement('button');
-    playScaleBtn.innerText = "🎹 Hear All Intervals";
-    playScaleBtn.style.padding = '8px 12px';
-    playScaleBtn.style.cursor = 'pointer';
-    playScaleBtn.onclick = playAllIntervals;
-
-    reviewDiv.appendChild(replayBtn);
-    reviewDiv.appendChild(playScaleBtn);
-    statusContainer.appendChild(reviewDiv);
+    const intervalsLabel = document.createElement('div');
     
+    let dirTxt = 'ascending';
+    if (lastQuestionDetails.direction === 'Descending') dirTxt = 'descending';
+    else if (lastQuestionDetails.direction === 'Harmonic') dirTxt = 'harmonic';
+    
+    intervalsLabel.innerText = `Compare specific ${dirTxt} intervals against the Root note:`;
+    intervalsLabel.style.fontSize = '0.9em';
+    intervalsLabel.style.color = '#9ca3af';
+    reviewContainer.appendChild(intervalsLabel);
+
+    const intervalsGrid = document.createElement('div');
+    intervalsGrid.style.display = 'flex';
+    intervalsGrid.style.flexWrap = 'wrap';
+    intervalsGrid.style.gap = '5px';
+    intervalsGrid.style.justifyContent = 'center';
+    intervalsGrid.style.maxWidth = '500px';
+
+    const reviewIntervals = [
+        { name: "Root", semi: 0 }, { name: "m2", semi: 1 }, { name: "M2", semi: 2 },
+        { name: "m3", semi: 3 }, { name: "M3", semi: 4 }, { name: "P4", semi: 5 },
+        { name: "TT", semi: 6 }, { name: "P5", semi: 7 }, { name: "m6", semi: 8 },
+        { name: "M6", semi: 9 }, { name: "m7", semi: 10 }, { name: "M7", semi: 11 },
+        { name: "8va", semi: 12 }
+    ];
+
+    reviewIntervals.forEach(int => {
+        const btn = document.createElement('button');
+        btn.innerText = int.name;
+        btn.style.padding = '6px 10px';
+        btn.style.cursor = 'pointer';
+        btn.style.fontSize = '0.85em';
+        btn.style.backgroundColor = '#374151';
+        btn.style.color = 'white';
+        btn.style.border = '1px solid #4b5563';
+        btn.style.borderRadius = '4px';
+        
+        btn.onmouseover = () => btn.style.backgroundColor = '#4b5563';
+        btn.onmouseout = () => btn.style.backgroundColor = '#374151';
+        
+        btn.onclick = () => playReviewInterval(int.semi);
+        intervalsGrid.appendChild(btn);
+    });
+
+    reviewContainer.appendChild(intervalsGrid);
+    statusContainer.appendChild(reviewContainer);
+    
+    // =========================================================
+    // NEW: Define the stat tracking key based on direction
+    let statKey = currentQuestion.answer;
+    if (currentQuestion.mode === 'Direct') {
+        // e.g. changes "M3" to "Descending M3" for the stats
+        statKey = `${currentQuestion.direction} ${currentQuestion.answer}`;
+    }
+    // =========================================================
+
     let stats = JSON.parse(localStorage.getItem('harmonyStats')) || {};
-    if (!stats[currentQuestion.answer]) stats[currentQuestion.answer] = { attempts: 0, correct: 0 };
-    stats[currentQuestion.answer].attempts++;
-    if (isCorrect) stats[currentQuestion.answer].correct++;
+    if (!stats[statKey]) stats[statKey] = { attempts: 0, correct: 0 };
+    stats[statKey].attempts++;
+    if (isCorrect) stats[statKey].correct++;
     localStorage.setItem('harmonyStats', JSON.stringify(stats));
+
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const mode = currentQuestion.mode; 
+
+    let timeStats = JSON.parse(localStorage.getItem('harmonyTimeStats')) || {
+        'Direct': {}, 'Context': {}, 'ChordInKey': {}
+    };
+
+    if (!timeStats[mode]) timeStats[mode] = {};
+    if (!timeStats[mode][statKey]) timeStats[mode][statKey] = {};
+    if (!timeStats[mode][statKey][today]) timeStats[mode][statKey][today] = { attempts: 0, correct: 0 };
+
+    timeStats[mode][statKey][today].attempts++;
+    if (isCorrect) timeStats[mode][statKey][today].correct++;
+
+    localStorage.setItem('harmonyTimeStats', JSON.stringify(timeStats));
 
     fetch(GOOGLE_WEB_APP_URL, {
         method: 'POST',
@@ -465,7 +609,7 @@ function handleAnswer(selected, gridId) {
         body: JSON.stringify({
             mode: currentQuestion.mode,
             context: currentQuestion.context,
-            question: currentQuestion.answer,
+            question: statKey,  // Send the detailed stat key to Google Sheets!
             isCorrect: isCorrect,
             responseTime: responseTime
         })
@@ -479,19 +623,97 @@ function handleAnswer(selected, gridId) {
 
 // --- DASHBOARD ---
 let chartInstance = null;
+let currentChartMode = 'Direct';
+
 function renderChart() {
-    const stats = JSON.parse(localStorage.getItem('harmonyStats')) || {};
-    const labels = Object.keys(stats);
-    const data = labels.map(key => stats[key].attempts === 0 ? 0 : Math.round((stats[key].correct / stats[key].attempts) * 100));
+    let chartControls = document.getElementById('chart-controls');
+    if (!chartControls) {
+        chartControls = document.createElement('div');
+        chartControls.id = 'chart-controls';
+        chartControls.style.marginBottom = '20px';
+        chartControls.style.textAlign = 'center';
+        chartControls.innerHTML = `
+            <label style="margin-right: 10px; font-weight: bold;">Select Training Mode:</label>
+            <select id="chart-mode-select" style="padding: 8px; border-radius: 5px; background: #374151; color: white; border: none;">
+                <option value="Direct">Direct Intervals</option>
+                <option value="Context">Context Intervals</option>
+                <option value="ChordInKey">Chords in Key</option>
+            </select>
+        `;
+        
+        const canvas = document.getElementById('accuracyChart');
+        canvas.parentNode.insertBefore(chartControls, canvas);
+
+        document.getElementById('chart-mode-select').addEventListener('change', (e) => {
+            currentChartMode = e.target.value;
+            drawTimeChart();
+        });
+    }
+    
+    if (typeof Chart !== 'undefined') {
+        Chart.defaults.color = '#e5e7eb';
+        drawTimeChart();
+    }
+}
+
+function drawTimeChart() {
+    const timeStats = JSON.parse(localStorage.getItem('harmonyTimeStats')) || {};
+    const modeData = timeStats[currentChartMode] || {};
+
+    const allDates = new Set();
+    Object.keys(modeData).forEach(item => {
+        Object.keys(modeData[item]).forEach(date => allDates.add(date));
+    });
+    const sortedDates = Array.from(allDates).sort();
+
+    const colors = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#f43f5e'];
+
+    const datasets = Object.keys(modeData).map((item, index) => {
+        const dataPoints = sortedDates.map(date => {
+            const dayStat = modeData[item][date];
+            if (!dayStat || dayStat.attempts === 0) return null; 
+            return Math.round((dayStat.correct / dayStat.attempts) * 100);
+        });
+
+        return {
+            label: item,
+            data: dataPoints,
+            borderColor: colors[index % colors.length],
+            backgroundColor: colors[index % colors.length],
+            borderWidth: 3,
+            tension: 0.3, 
+            spanGaps: true 
+        };
+    });
 
     if (chartInstance) chartInstance.destroy();
-    chartInstance = new Chart(document.getElementById('accuracyChart').getContext('2d'), {
-        type: 'bar',
+    const ctx = document.getElementById('accuracyChart');
+    if (!ctx) return;
+    
+    chartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'line',
         data: {
-            labels: labels,
-            datasets: [{ label: 'Accuracy %', data: data, backgroundColor: 'rgba(79, 70, 229, 0.7)' }]
+            labels: sortedDates,
+            datasets: datasets
         },
-        options: { scales: { y: { beginAtZero: true, max: 100 } } }
+        options: {
+            responsive: true,
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    max: 100, 
+                    title: { display: true, text: 'Accuracy %' },
+                    grid: { color: 'rgba(255,255,255,0.1)' }
+                },
+                x: { 
+                    title: { display: true, text: 'Date' },
+                    grid: { color: 'rgba(255,255,255,0.1)' }
+                }
+            },
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
     });
 }
 
