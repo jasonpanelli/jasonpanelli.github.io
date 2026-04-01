@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harmony Analytics</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Harmony Analytics</h1>
+        <div id="loading-status" class="loading-badge">Loading Piano...</div>
+    </header>
+
+    <nav class="main-nav">
+        <button onclick="switchTab('direct')" class="active" id="btn-direct">Direct</button>
+        <button onclick="switchTab('context')" id="btn-context">Context</button>
+        <button onclick="switchTab('progressions')" id="btn-progressions">Chords</button>
+        <button onclick="switchTab('dashboard')" id="btn-dashboard">Stats</button>
+        <button onclick="switchTab('settings')" id="btn-settings">⚙️</button>
+    </nav>
+
+    <main>
+        <!-- Mode 1: Direct Intervals -->
+        <section id="direct" class="tab-content active">
+            <div class="controls"><button id="play-direct" class="primary-btn" disabled>Play Interval</button></div>
+            <div class="status-msg" id="status-direct">Load piano to begin...</div>
+            <div class="answers-grid" id="grid-direct"></div>
+        </section>
+
+        <!-- Mode 2: Context Intervals -->
+        <section id="context" class="tab-content">
+            <div class="controls">
+                <button id="play-major" class="primary-btn" disabled>Major Context</button>
+                <button id="play-minor" class="primary-btn" disabled>Minor Context</button>
+            </div>
+            <div class="status-msg" id="status-context">Load piano to begin...</div>
+            <div class="answers-grid" id="grid-context"></div>
+        </section>
+
+        <!-- Mode 3: Progressions -->
+        <section id="progressions" class="tab-content">
+            <div class="controls"><button id="play-progression" class="primary-btn" disabled>Play Progression</button></div>
+            <div class="status-msg" id="status-progressions">Load piano to begin...</div>
+            <div class="answers-grid progressions-grid" id="grid-progressions"></div>
+        </section>
+
+        <!-- Dashboard -->
+        <section id="dashboard" class="tab-content">
+            <div class="chart-container"><canvas id="accuracyChart"></canvas></div>
+        </section>
+
+        <!-- Settings -->
+        <section id="settings" class="tab-content">
+            <h2>Active Intervals</h2>
+            <div class="settings-grid" id="settings-intervals"></div>
+            <h2 style="margin-top: 2rem;">Active Progressions</h2>
+            <div class="settings-grid" id="settings-progressions"></div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
