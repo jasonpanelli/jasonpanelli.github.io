@@ -59,6 +59,11 @@ async function initAudio() {
     }
 }
 
+function midiToNote(midi) {
+    const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    return `${notes[midi % 12]}${Math.floor(midi / 12) - 1}`;
+}
+
 // --- UI SETUP ---
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
