@@ -2,10 +2,6 @@
 const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_DC60RQqwPQLX87O4FQ_jPjsjTLL4v_1vAp8AdiH0Eu7TA0FlE25WUYGFX8qikGM1QA/exec"; 
 
 const INTERVALS = ["m2", "M2", "m3", "M3", "P4", "Tritone", "P5", "m6", "M6", "m7", "M7", "Octave"];
-// --- CONFIGURATION ---
-const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_DC60RQqwPQLX87O4FQ_jPjsjTLL4v_1vAp8AdiH0Eu7TA0FlE25WUYGFX8qikGM1QA/exec"; 
-
-const INTERVALS = ["m2", "M2", "m3", "M3", "P4", "Tritone", "P5", "m6", "M6", "m7", "M7", "Octave"];
 
 // The individual chords the user can be tested on
 const TARGET_CHORDS = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°', 'i', 'ii°', 'III', 'iv', 'VI'];
