@@ -28,13 +28,39 @@ let activeSettings = {
     speed: savedSettings.speed || 1.0
 };
 
-// --- AUDIO ENGINE (PIANO SAMPLER) ---
-piano = new Tone.Sampler({
-    urls: {
-        "A0": "A0.mp3", "C2": "C2.mp3", "C4": "C4.mp3", "C6": "C6.mp3", "C8": "C8.mp3"
-    },
-    release: 1,
-    baseUrl: "https://tonejs.github.io/audio/salamander/"
+function generate88KeyMap(extension = '.mp3') {
+    const noteNames = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    const urls = {};
+
+    // The standard piano starts at A0, Bb0, and B0
+    urls['A0'] = `A0${extension}`;
+    urls['Bb0'] = `Bb0${extension}`;
+    urls['B0'] = `B0${extension}`;
+
+    // Loop through octaves 1 to 7
+    for (let octave = 1; octave <= 7; octave++) {
+        noteNames.forEach(note => {
+            // e.g., "C4" : "C4.mp3"
+            urls[`${note}${octave}`] = `${note}${octave}${extension}`;
+        });
+    }
+
+    // The standard piano ends at C8
+    urls['C8'] = `C8${extension}`;
+
+    return urls;
+}
+
+// Generate the full mapping object
+const pianoUrls = generate88KeyMap('.mp3');
+
+const piano = new Tone.Sampler({
+    urls: pianoUrls,
+    baseUrl: "samples/piano/", // Make sure this points to your actual folder
+    onload: () => {
+        console.log("All 88 piano samples loaded!");
+        // If you have a loading screen or disabled play buttons, enable them here
+    }
 }).toDestination();
 
 piano.volume.value = 5;
@@ -61,6 +87,50 @@ function midiToNote(midi) {
     const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     return `${notes[midi % 12]}${Math.floor(midi / 12) - 1}`;
 }
+
+// Converts an array of MIDI numbers to Tone.js note strings (e.g., [60, 64, 67] -> ["C4", "E4", "G4"])
+function midiToNotes(midiArray) {
+    return midiArray.map(midi => Tone.Frequency(midi, "midi").toNote());
+}
+
+// Applies a random inversion (Root position, 1st, or 2nd inversion)
+function invertChord(midiArray) {
+    let chord = [...midiArray];
+    const inversion = Math.floor(Math.random() * 3); // 0, 1, or 2
+    
+    if (inversion === 1) {
+        chord[0] += 12; // Move bottom note up an octave (1st Inversion)
+    } else if (inversion === 2) {
+        chord[0] += 12; 
+        chord[1] += 12; // Move bottom two notes up an octave (2nd Inversion)
+    }
+    
+    // Sort from lowest to highest pitch
+    return chord.sort((a, b) => a - b);
+}
+
+// Define diatonic chord formulas (semi-tone offsets from the root of the key)
+// Note: We use Harmonic Minor for the minor key cadence so the V chord is major
+const KEY_CHORDS = {
+    major: {
+        'I': [0, 4, 7],
+        'ii': [2, 5, 9],
+        'iii': [4, 7, 11],
+        'IV': [5, 9, 12],
+        'V': [7, 11, 14],
+        'vi': [9, 12, 16],
+        'vii°': [11, 14, 17]
+    },
+    minor: {
+        'i': [0, 3, 7],
+        'ii°': [2, 5, 8],
+        'III': [3, 7, 10],
+        'iv': [5, 8, 12],
+        'V': [7, 11, 14], // Harmonic minor V (Major chord)
+        'VI': [8, 12, 15],
+        'vii°': [11, 14, 17]
+    }
+};
 
 // --- UI SETUP ---
 function switchTab(tabId) {
@@ -214,27 +284,58 @@ document.getElementById('play-minor').onclick = () => playContext('Minor');
 
 // 3. Progressions
 document.getElementById('play-progression').onclick = async () => {
-    await initAudio();
-    if (activeSettings.progressions.length === 0) return alert("Enable progressions in Settings!");
-
-    if (!currentQuestion || currentQuestion.mode !== 'Progression') {
-        const rootMidi = Math.floor(Math.random() * 12) + 60;
-        const progStr = activeSettings.progressions[Math.floor(Math.random() * activeSettings.progressions.length)];
-        
-        currentQuestion = { answer: progStr, mode: 'Progression', context: 'None' };
-        
-        const chordsNotes = PROGRESSIONS[progStr].map(chord => chord.map(semi => midiToNote(rootMidi + semi)));
-        playbackData = { chords: chordsNotes };
-    }
+    await initAudio(); // Ensure context is running
     
     const now = Tone.now();
     const t = 1 / activeSettings.speed;
-
-    playbackData.chords.forEach((chordNotes, index) => {
-        piano.triggerAttackRelease(chordNotes, 1.2 * t, now + (index * 1.2 * t));
+    
+    // 1. Pick a random Root Note for the key (MIDI 48 to 55: C3 to G3 makes a good bass foundation)
+    const rootMidi = Math.floor(Math.random() * 8) + 48;
+    
+    // 2. Decide if the key is Major or Minor
+    const isMajor = Math.random() > 0.5;
+    const mode = isMajor ? 'major' : 'minor';
+    const chordDict = KEY_CHORDS[mode];
+    
+    // 3. Build the Cadence 
+    const cadenceNumerals = isMajor ? ['I', 'IV', 'V', 'I'] : ['i', 'iv', 'V', 'i'];
+    
+    // Map numerals to absolute MIDI, invert them randomly, and convert to Tone.js notes
+    const cadenceChords = cadenceNumerals.map(numeral => {
+        const baseMidi = chordDict[numeral].map(offset => rootMidi + offset);
+        return midiToNotes(invertChord(baseMidi));
     });
 
-    prepAnswer('status-progressions', 'grid-progressions', playbackData.chords.length * 1200 * t);
+    // 4. Pick a random Target Chord from the key
+    const allNumerals = Object.keys(chordDict);
+    const randomTargetNumeral = allNumerals[Math.floor(Math.random() * allNumerals.length)];
+    const targetBaseMidi = chordDict[randomTargetNumeral].map(offset => rootMidi + offset);
+    
+    // We add 12 to the target chord to play it one octave higher than the cadence bass
+    const targetChord = midiToNotes(invertChord(targetBaseMidi.map(note => note + 12)));
+
+    // --- PLAYBACK ---
+    
+    // Play Cadence (each chord lasts 1 beat)
+    let timeOffset = 0;
+    cadenceChords.forEach(chordNotes => {
+        piano.triggerAttackRelease(chordNotes, 1 * t, now + timeOffset);
+        timeOffset += (1 * t);
+    });
+    
+    // Pause for 1 beat after the cadence completes
+    timeOffset += (1 * t);
+    
+    // Play Target Chord (lasts 2.5 beats so it rings out)
+    piano.triggerAttackRelease(targetChord, 2.5 * t, now + timeOffset);
+    
+    // For your debugging/answer-checking later:
+    console.log(`Key: ${Tone.Frequency(rootMidi, "midi").toNote().replace(/[0-9]/g, '')} ${mode}`);
+    console.log(`Target Chord: ${randomTargetNumeral}`, targetChord);
+    
+    // You will need to update your UI grid to display the Roman Numerals 
+    // instead of specific intervals/progressions for this mode.
+    // prepAnswer('status-progression', 'grid-progression', (timeOffset + 2.5) * 1000 * t);
 };
 
 // --- ANSWER HANDLING ---
