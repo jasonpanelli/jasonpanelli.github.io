@@ -22,51 +22,41 @@ let activeSettings = JSON.parse(localStorage.getItem('harmonySettings')) || {
     intervals: [...INTERVALS],
     progressions: Object.keys(PROGRESSIONS)
 };
-
 // --- AUDIO ENGINE (PIANO SAMPLER) ---
-async function initAudio() {
-    if (piano || isPianoLoaded) return;
-    await Tone.start();
+
+// 1. Start downloading the 5 piano files immediately in the background!
+piano = new Tone.Sampler({
+    urls: {
+        "A0": "A0.mp3",
+        "C2": "C2.mp3",
+        "C4": "C4.mp3",
+        "C6": "C6.mp3",
+        "C8": "C8.mp3"
+    },
+    release: 1,
+    baseUrl: "https://tonejs.github.io/audio/salamander/"
+}).toDestination();
+
+piano.volume.value = 5;
+
+// 2. When downloads finish, unlock the UI
+Tone.loaded().then(() => {
+    isPianoLoaded = true;
+    const badge = document.getElementById('loading-status');
+    badge.innerText = "Piano Ready";
+    badge.classList.add('ready');
+    setTimeout(() => badge.style.display = 'none', 3000);
     
-    // OPTIMIZATION: We only load 5 anchor notes instead of 30. 
-    // Tone.js automatically pitch-shifts these to cover the entire keyboard!
-    // This drops load time from ~10 seconds down to ~1-2 seconds.
-    piano = new Tone.Sampler({
-        urls: {
-            "A0": "A0.mp3",
-            "C2": "C2.mp3",
-            "C4": "C4.mp3",
-            "C6": "C6.mp3",
-            "C8": "C8.mp3"
-        },
-        release: 1,
-        baseUrl: "https://tonejs.github.io/audio/salamander/"
-    }).toDestination();
+    // This is the magic line that un-grays the buttons!
+    document.querySelectorAll('.primary-btn').forEach(btn => btn.disabled = false);
+    document.querySelectorAll('.status-msg').forEach(msg => msg.innerText = "Ready to play.");
+});
 
-    // Add a slight volume boost to compensate for the sampler
-    piano.volume.value = 5;
-
-    Tone.loaded().then(() => {
-        isPianoLoaded = true;
-        const badge = document.getElementById('loading-status');
-        badge.innerText = "Piano Ready";
-        badge.classList.add('ready');
-        
-        // Hide badge after 3 seconds
-        setTimeout(() => {
-            badge.style.opacity = '0';
-            setTimeout(() => badge.style.display = 'none', 300);
-        }, 3000);
-        
-        // Enable buttons
-        document.querySelectorAll('.primary-btn').forEach(btn => btn.disabled = false);
-        document.querySelectorAll('.status-msg').forEach(msg => msg.innerText = "Ready to play.");
-    });
-}
-
-function midiToNote(midi) {
-    const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    return `${notes[midi % 12]}${Math.floor(midi / 12) - 1}`;
+// 3. When you finally click a button, tell Chrome it's allowed to make noise
+async function initAudio() {
+    if (Tone.context.state !== 'running') {
+        await Tone.start();
+    }
 }
 
 // --- UI SETUP ---
