@@ -1,1043 +1,750 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>EarTuner Mobile - Blind Pitch Trainer</title>
-
-  <!-- Tailwind CSS CDN -->
+  <title>EarTuner - Mobile Pitch Ear Trainer</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Font Awesome Icons CDN -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            brand: {
-              500: '#6366f1',
-              600: '#4f46e5',
-              700: '#4338ca',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
   <style>
-    /* Strict Mobile Viewport & Lock Rules */
-    html, body {
-      height: 100%;
-      height: 100dvh;
-      max-height: 100dvh;
-      overflow: hidden;
-      touch-action: manipulation;
+    /* Prevent selection and default touch behaviors on mobile */
+    * {
       -webkit-tap-highlight-color: transparent;
       user-select: none;
-      -webkit-user-select: none;
-      background-color: #090d16;
-      color: #f3f4f6;
+      box-sizing: border-box;
     }
-
-    /* Range slider custom touch styling */
+    
+    /* Custom Range Slider Styling for Touch */
     input[type=range] {
       -webkit-appearance: none;
-      appearance: none;
+      width: 100%;
       background: transparent;
       touch-action: manipulation;
     }
-    
     input[type=range]:focus {
       outline: none;
     }
-    
-    input[type=range]::-webkit-slider-track {
+    input[type=range]::-webkit-slider-runnable-track {
       width: 100%;
-      height: 14px;
+      height: 18px;
       cursor: pointer;
-      background: #111827;
+      background: #1e293b;
       border-radius: 9999px;
-      border: 1px solid #374151;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+      border: 1px solid #334155;
     }
-    
     input[type=range]::-webkit-slider-thumb {
-      height: 32px;
-      width: 32px;
+      height: 36px;
+      width: 36px;
       border-radius: 50%;
-      background: #6366f1;
+      background: #38bdf8;
       cursor: pointer;
       -webkit-appearance: none;
       margin-top: -9px;
-      box-shadow: 0 0 12px rgba(99, 102, 241, 0.8);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.6), inset 0 0 4px #ffffff;
       border: 2px solid #ffffff;
-      transition: transform 0.1s ease;
     }
-
-    input[type=range]::-webkit-slider-thumb:active {
-      transform: scale(1.15);
-      background: #818cf8;
-    }
-
     input[type=range]::-moz-range-track {
       width: 100%;
-      height: 14px;
+      height: 18px;
       cursor: pointer;
-      background: #111827;
+      background: #1e293b;
       border-radius: 9999px;
-      border: 1px solid #374151;
+      border: 1px solid #334155;
     }
-
     input[type=range]::-moz-range-thumb {
-      height: 32px;
-      width: 32px;
+      height: 36px;
+      width: 36px;
       border-radius: 50%;
-      background: #6366f1;
+      background: #38bdf8;
       cursor: pointer;
       border: 2px solid #ffffff;
-    }
-
-    .glass-card {
-      background: rgba(17, 24, 39, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
     }
   </style>
 </head>
-<body class="h-[100dvh] max-h-[100dvh] w-full flex flex-col font-sans antialiased text-gray-100 overflow-hidden">
+<body class="h-full w-full overflow-hidden flex flex-col justify-between p-3 max-w-md mx-auto select-none font-sans bg-slate-950 text-slate-100">
 
-  <div id="audioUnlockBanner" class="bg-indigo-600 text-white text-[11px] font-semibold py-1.5 px-3 text-center flex items-center justify-between cursor-pointer shrink-0 z-50">
-    <div class="flex items-center gap-2 mx-auto">
-      <i class="fa-solid fa-volume-high animate-bounce text-xs"></i>
-      <span>Tap anywhere to enable audio engine for iOS/Mobile</span>
-    </div>
-  </div>
-
-  <header class="shrink-0 px-3 py-2 border-b border-gray-800/80 bg-gray-900/90 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-md">
-        <i class="fa-solid fa-ear-listen text-xs"></i>
+  <!-- TOP HEADER -->
+  <header class="flex items-center justify-between py-1 border-b border-slate-800 shrink-0">
+    <div class="flex items-center space-x-2">
+      <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-md shadow-indigo-500/30">
+        🎵
       </div>
       <div>
-        <h1 class="font-extrabold text-sm text-white leading-none flex items-center gap-1.5">
-          EarTuner
-          <span class="text-[9px] bg-indigo-500/20 text-indigo-300 font-mono px-1.5 py-0.5 rounded border border-indigo-500/30">100dvh Mobile</span>
-        </h1>
+        <h1 class="text-base font-bold tracking-tight text-white leading-none">EarTuner</h1>
+        <p class="text-[10px] text-slate-400 font-medium">Relative Pitch Trainer</p>
       </div>
     </div>
-
-    <!-- Master Volume & History Drawer Trigger -->
-    <div class="flex items-center gap-2">
-      <div class="flex items-center gap-1.5 bg-gray-800 px-2 py-1 rounded-lg border border-gray-700">
-        <i class="fa-solid fa-volume-low text-[10px] text-gray-400"></i>
-        <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="0.5" class="w-12 h-1 accent-indigo-500">
-      </div>
-      <button id="openHistoryBtn" class="w-7 h-7 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 flex items-center justify-center text-xs transition" title="Session History">
-        <i class="fa-solid fa-clock-rotate-left"></i>
+    
+    <div class="flex items-center space-x-2">
+      <button id="btn-settings" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 flex items-center space-x-1 transition-all">
+        <span>⚙️</span>
+        <span>Settings</span>
       </button>
     </div>
   </header>
 
-  <main class="flex-1 min-h-0 px-2 sm:px-4 py-2 flex flex-col justify-between gap-2 overflow-hidden">
+  <!-- MAIN APP CONTAINER (FIT IN 100DVH) -->
+  <main class="flex-1 min-h-0 flex flex-col justify-between py-2 space-y-2 overflow-hidden">
 
-    <!-- 1. SETUP CARD (COMPACT) -->
-    <section class="glass-card rounded-xl p-2.5 shadow-md shrink-0 space-y-2">
-      <div class="flex items-center justify-between">
-        <span class="text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
-          <i class="fa-solid fa-sliders"></i> 1. Root Note & Target
-        </span>
-        <span id="rootOctaveTag" class="text-[10px] font-mono text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">MIDI 60</span>
+    <!-- PROMPT / INTERVAL DISPLAY CARD -->
+    <section class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-lg flex flex-col justify-between shrink-0">
+      <div class="flex justify-between items-start">
+        <div>
+          <span class="text-[10px] uppercase font-bold tracking-wider text-indigo-400">Target Challenge</span>
+          <div class="flex items-center space-x-1.5 mt-0.5">
+            <span id="display-root-badge" class="text-xs font-bold text-indigo-300 bg-indigo-950 px-2 py-0.5 rounded border border-indigo-800/80">Root: C4</span>
+            <span id="display-interval-name" class="text-sm font-extrabold text-white">Perfect 5th</span>
+            <span id="display-direction-badge" class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 font-semibold border border-indigo-800/50">UP</span>
+          </div>
+        </div>
+        
+        <!-- PING ROOT BUTTON -->
+        <button id="btn-ping-root" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-lg font-bold text-xs shadow-md shadow-indigo-600/30 flex items-center space-x-1 transition-all shrink-0">
+          <span>🔊</span>
+          <span>Ping Root</span>
+        </button>
       </div>
 
-      <div class="grid grid-cols-2 gap-2">
-        <!-- Root Note Controls -->
-        <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800/80 flex flex-col gap-1.5">
-          <div class="flex items-center justify-between">
-            <label for="rootNoteSelect" class="text-[10px] text-gray-400 font-medium">Root Note:</label>
-            <span id="rootFreqText" class="text-[10px] font-mono text-indigo-300 font-bold">261.6 Hz</span>
-          </div>
-          
-          <select id="rootNoteSelect" class="w-full bg-gray-800 border border-gray-700 text-gray-100 text-xs rounded-lg p-1.5 font-mono font-semibold">
-            <!-- Dynamically populated C3 to C5 -->
-          </select>
-
-          <div class="grid grid-cols-2 gap-1 pt-0.5">
-            <button id="playRootPingBtn" class="py-1.5 px-1 bg-indigo-950 hover:bg-indigo-900 active:scale-95 text-indigo-200 border border-indigo-700/60 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 transition min-h-[36px]">
-              <i class="fa-solid fa-play text-[9px] text-indigo-400"></i> Ping Root
-            </button>
-            <button id="randomRootBtn" class="py-1.5 px-1 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 transition shadow-sm min-h-[36px]">
-              <i class="fa-solid fa-shuffle text-[9px]"></i> New Root
-            </button>
-          </div>
-        </div>
-
-        <!-- Interval & Direction Controls -->
-        <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800/80 flex flex-col gap-1.5">
-          <label for="intervalSelect" class="text-[10px] text-gray-400 font-medium">Interval & Direction:</label>
-          <select id="intervalSelect" class="w-full bg-gray-800 border border-gray-700 text-gray-100 text-xs rounded-lg p-1.5 font-medium">
-            <option value="0">Unison (0 st)</option>
-            <option value="1">Minor 2nd (1 st)</option>
-            <option value="2">Major 2nd (2 st)</option>
-            <option value="3">Minor 3rd (3 st)</option>
-            <option value="4">Major 3rd (4 st)</option>
-            <option value="5">Perfect 4th (5 st)</option>
-            <option value="6">Tritone (6 st)</option>
-            <option value="7" selected>Perfect 5th (7 st)</option>
-            <option value="8">Minor 6th (8 st)</option>
-            <option value="9">Major 6th (9 st)</option>
-            <option value="10">Minor 7th (10 st)</option>
-            <option value="11">Major 7th (11 st)</option>
-            <option value="12">Octave (12 st)</option>
-          </select>
-
-          <div class="grid grid-cols-2 gap-1 pt-0.5">
-            <button id="dirUpBtn" class="dir-btn py-1.5 bg-indigo-600 text-white font-bold text-[10px] rounded-lg border border-indigo-400/40 flex items-center justify-center gap-1 min-h-[36px]">
-              <i class="fa-solid fa-arrow-trend-up text-[9px]"></i> Up
-            </button>
-            <button id="dirDownBtn" class="dir-btn py-1.5 bg-gray-800 text-gray-400 font-bold text-[10px] rounded-lg border border-gray-700 hover:bg-gray-700 flex items-center justify-center gap-1 min-h-[36px]">
-              <i class="fa-solid fa-arrow-trend-down text-[9px]"></i> Down
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Drone Switched Bar -->
-      <div class="flex items-center justify-between bg-gray-900/60 px-2.5 py-1.5 rounded-lg border border-gray-800">
-        <div class="flex items-center gap-1.5">
-          <i class="fa-solid fa-infinity text-xs text-indigo-400"></i>
-          <span class="text-[11px] font-medium text-gray-300">Root Continuous Drone</span>
-        </div>
+      <!-- ROOT DRONE TOGGLE -->
+      <div class="mt-2 pt-2 border-t border-slate-800/80 flex justify-between items-center text-xs">
+        <span class="text-slate-400 font-medium text-[11px]">Root Drone</span>
         <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="rootDroneToggle" class="sr-only peer">
-          <div class="w-9 h-5 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+          <input type="checkbox" id="toggle-root-drone" class="sr-only peer">
+          <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
         </label>
       </div>
     </section>
 
-    <!-- 2. BLIND CONTINUOUS PITCH TUNING CARD (FLEX FIT) -->
-    <section class="glass-card rounded-xl p-2.5 shadow-md flex-1 min-h-0 flex flex-col justify-between space-y-2 border-indigo-500/20">
-      
-      <div class="flex items-center justify-between">
-        <span class="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1">
-          <i class="fa-solid fa-eye-slash"></i> 2. Blind Ear Tuning Controls
+    <!-- TUNING CONTROLS CARD -->
+    <section class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-lg flex flex-col justify-between flex-1 min-h-0">
+      <div class="flex justify-between items-center mb-1">
+        <span class="text-[10px] uppercase font-bold tracking-wider text-amber-400 flex items-center space-x-1">
+          <span>👂</span>
+          <span>Blind Ear Tuning</span>
         </span>
-        <div class="flex items-center gap-2">
-          <span class="text-[9px] font-mono text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800/80">Micro-Tuning Active</span>
+        <span id="display-user-hz" class="text-xs font-mono font-bold text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">??? Hz</span>
+      </div>
+
+      <!-- PITCH SLIDER -->
+      <div class="my-auto py-2">
+        <input type="range" id="pitch-slider" min="0" max="1000" value="500" class="w-full">
+        <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-mono">
+          <span>Lower Pitch</span>
+          <span class="text-amber-400 font-semibold">Release to Ping 🔊</span>
+          <span>Higher Pitch</span>
         </div>
       </div>
 
-      <!-- READOUT BOX (Blind vs Revealed) -->
-      <div id="pitchReadoutCard" class="bg-gray-900/90 rounded-xl p-2 border border-gray-800 text-center shrink-0">
-        <div id="unverifiedReadout" class="py-0.5">
-          <div class="text-xl font-extrabold text-gray-500 font-mono tracking-wider">
-            ??? <span class="text-xs font-normal text-gray-600">Hz</span>
-          </div>
-          <div class="text-[10px] text-gray-400 font-mono">
-            Listen & adjust pitch slider by ear. Values hidden until verified.
-          </div>
-        </div>
-
-        <div id="verifiedReadout" class="hidden py-0.5">
-          <div class="flex items-baseline justify-center gap-2">
-            <span id="revealedUserFreq" class="text-xl font-extrabold text-amber-300 font-mono">-- Hz</span>
-            <span id="revealedUserNote" class="text-xs font-mono px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800 font-bold">--</span>
-          </div>
-          <div class="text-[10px] text-gray-400 font-mono mt-0.5">
-            Target: <span id="targetFreqRevealed" class="text-emerald-400 font-bold">-- Hz</span>
-          </div>
-        </div>
+      <!-- MICRO TUNING BUTTONS -->
+      <div class="grid grid-cols-4 gap-1.5 mt-1">
+        <button id="btn-fine-minus-10" class="py-2 bg-slate-800 hover:bg-slate-700 active:bg-amber-900/50 text-amber-300 rounded-lg text-xs font-bold border border-slate-700 transition-all">-10¢</button>
+        <button id="btn-fine-minus-1" class="py-2 bg-slate-800 hover:bg-slate-700 active:bg-amber-900/50 text-amber-300 rounded-lg text-xs font-bold border border-slate-700 transition-all">-1¢</button>
+        <button id="btn-fine-plus-1" class="py-2 bg-slate-800 hover:bg-slate-700 active:bg-amber-900/50 text-amber-300 rounded-lg text-xs font-bold border border-slate-700 transition-all">+1¢</button>
+        <button id="btn-fine-plus-10" class="py-2 bg-slate-800 hover:bg-slate-700 active:bg-amber-900/50 text-amber-300 rounded-lg text-xs font-bold border border-slate-700 transition-all">+10¢</button>
       </div>
 
-      <!-- COARSE PITCH SLIDER -->
-      <div class="space-y-1">
-        <div class="flex justify-between text-[10px] text-gray-400 font-mono">
-          <span>Coarse Range:</span>
-          <span class="text-indigo-400 font-semibold">Rough Octave Slider</span>
-        </div>
-        <input type="range" id="coarseSlider" min="-1800" max="1800" step="10" value="0" class="w-full">
-      </div>
-
-      <!-- FINE PITCH SLIDER & STEP BUTTONS -->
-      <div class="bg-gray-900/80 p-2 rounded-lg border border-gray-800 space-y-1.5">
-        <div class="flex justify-between text-[10px] text-gray-300 font-mono">
-          <span class="text-amber-400 font-bold">Fine Tune:</span>
-          <span id="fineCentsLabel" class="text-amber-300 font-bold">0 Cents</span>
-        </div>
-
-        <!-- Fine Tune Slider (-100c to +100c) -->
-        <input type="range" id="fineSlider" min="-100" max="100" step="0.5" value="0" class="w-full accent-amber-500">
-
-        <!-- Fine Tuning Touch Step Buttons -->
-        <div class="grid grid-cols-6 gap-1 pt-1">
-          <button data-cents="-50" class="fine-btn py-2 bg-gray-800 active:bg-indigo-600 text-gray-200 text-[10px] font-mono font-bold rounded-lg border border-gray-700 transition active:scale-95 min-h-[38px]">-50c</button>
-          <button data-cents="-10" class="fine-btn py-2 bg-gray-800 active:bg-indigo-600 text-gray-200 text-[10px] font-mono font-bold rounded-lg border border-gray-700 transition active:scale-95 min-h-[38px]">-10c</button>
-          <button data-cents="-1" class="fine-btn py-2 bg-gray-800 active:bg-indigo-600 text-indigo-300 text-[10px] font-mono font-bold rounded-lg border border-indigo-900 transition active:scale-95 min-h-[38px]">-1c</button>
-          <button data-cents="1" class="fine-btn py-2 bg-gray-800 active:bg-indigo-600 text-indigo-300 text-[10px] font-mono font-bold rounded-lg border border-indigo-900 transition active:scale-95 min-h-[38px]">+1c</button>
-          <button data-cents="10" class="fine-btn py-2 bg-gray-800 active:bg-indigo-600 text-gray-200 text-[10px] font-mono font-bold rounded-lg border border-gray-700 transition active:scale-95 min-h-[38px]">+10c</button>
-          <button data-cents="50" class="fine-btn py-2 bg-gray-800 active:bg-indigo-600 text-gray-200 text-[10px] font-mono font-bold rounded-lg border border-gray-700 transition active:scale-95 min-h-[38px]">+50c</button>
-        </div>
-      </div>
-
-      <!-- Audio Action Bar (Ping My Note & Drone) -->
-      <div class="grid grid-cols-2 gap-2 shrink-0">
-        <button id="playUserPitchPingBtn" class="py-2 px-3 bg-amber-950/80 hover:bg-amber-900 active:scale-95 text-amber-200 text-xs font-bold rounded-lg border border-amber-800 flex items-center justify-center gap-1.5 transition min-h-[40px]">
-          <i class="fa-solid fa-play text-amber-400 text-xs"></i>
-          <span>Ping My Note</span>
+      <!-- USER DRONE & PING MY PITCH -->
+      <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-800/80">
+        <button id="btn-ping-user" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center space-x-1 shadow-md shadow-amber-600/20">
+          <span>🔊</span>
+          <span>Ping Pitch</span>
         </button>
 
-        <div class="flex items-center justify-between bg-gray-900/80 px-2.5 py-1.5 rounded-lg border border-gray-800 min-h-[40px]">
-          <div class="flex items-center gap-1">
-            <i class="fa-solid fa-volume-high text-xs text-amber-400"></i>
-            <span class="text-[10px] font-medium text-gray-300">User Drone</span>
-          </div>
+        <div class="flex items-center space-x-2 text-xs">
+          <span class="text-slate-400 font-medium text-[11px]">Pitch Drone</span>
           <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="sliderDroneToggle" class="sr-only peer">
-            <div class="w-9 h-5 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+            <input type="checkbox" id="toggle-user-drone" class="sr-only peer">
+            <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
           </label>
         </div>
       </div>
-
     </section>
 
-    <!-- 3. VERIFICATION & LINEAR AXIS TRACK CARD -->
-    <section class="glass-card rounded-xl p-2.5 shadow-md shrink-0 space-y-2 border-indigo-500/20">
-      
-      <!-- Primary Verify Button -->
-      <button id="verifyPitchBtn" class="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 active:scale-98 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 min-h-[44px]">
-        <i class="fa-solid fa-circle-check text-base"></i>
+    <!-- VERIFICATION / NEXT ROUND BUTTON -->
+    <div class="shrink-0">
+      <button id="btn-verify" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition-all">
+        <span>🎯</span>
         <span>VERIFY PITCH ACCURACY</span>
       </button>
 
-      <!-- LINEAR PITCH AXIS DISPLAY TRACK -->
-      <div class="bg-gray-900/90 rounded-xl p-2.5 border border-gray-800 flex flex-col relative overflow-hidden">
-        
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-[10px] font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1">
-            <i class="fa-solid fa-sliders text-indigo-400"></i> Linear Pitch Axis Display
-          </span>
-          <span id="centsBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-gray-800 text-gray-400 border border-gray-700">
-            Unverified
-          </span>
+      <button id="btn-next-round" class="hidden w-full py-3 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2 transition-all">
+        <span>🎲</span>
+        <span>NEXT ROUND</span>
+      </button>
+    </div>
+
+    <!-- RESULT & PITCH AXIS DISPLAY -->
+    <section id="result-card" class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-lg flex flex-col justify-between min-h-[135px] shrink-0">
+      <div id="result-unverified" class="my-auto text-center py-2">
+        <div class="text-slate-500 text-xs font-medium">Tune slider by ear, then tap Verify</div>
+      </div>
+
+      <div id="result-verified" class="hidden flex-col h-full justify-between space-y-2">
+        <!-- ACCURACY SUMMARY HEADER -->
+        <div class="flex justify-between items-center">
+          <div>
+            <div id="accuracy-score" class="text-sm font-extrabold text-emerald-400">Excellent!</div>
+            <div id="cents-error" class="text-[11px] font-mono text-slate-300">+4 Cents Off</div>
+          </div>
+          <div class="text-right font-mono text-[11px]">
+            <div id="target-hz-text" class="text-slate-400">Target: 392.0 Hz</div>
+            <div id="user-hz-text" class="text-amber-400 font-bold">Yours: 392.9 Hz</div>
+          </div>
         </div>
 
-        <!-- Linear Track Axis Container -->
-        <div id="linearAxisContainer" class="relative w-full h-20 my-1 flex flex-col justify-center">
+        <!-- LINEAR PITCH AXIS TRACK -->
+        <div class="relative w-full bg-slate-950 border border-slate-800 rounded-lg p-2 h-10 flex items-center">
+          <!-- Line Track -->
+          <div class="absolute inset-x-3 h-1 bg-slate-800 rounded-full"></div>
           
-          <!-- Background Axis Rail -->
-          <div class="relative w-full h-2.5 bg-gray-950 rounded-full border border-gray-800 shadow-inner overflow-hidden">
-            <!-- Shaded Error Connection Gap -->
-            <div id="axisErrorHighlight" class="absolute h-full transition-all duration-300 opacity-70"></div>
+          <!-- Highlight connection line -->
+          <div id="axis-error-line" class="absolute h-1 bg-amber-500/60 rounded-full" style="left: 50%; width: 0%;"></div>
+
+          <!-- Root Marker -->
+          <div id="pin-root" class="absolute -translate-x-1/2 flex flex-col items-center z-10" style="left: 15%;">
+            <span class="text-[9px] font-bold text-indigo-400 bg-indigo-950 px-1 rounded border border-indigo-800">Root</span>
+            <div class="w-2 h-2 rounded-full bg-indigo-500 mt-0.5 border border-white"></div>
           </div>
 
-          <!-- Dynamic Ticks Layer -->
-          <div id="axisTicksLayer" class="absolute w-full h-full pointer-events-none"></div>
-
-          <!-- Root Pin (Blue) -->
-          <div id="pinRoot" class="absolute transition-all duration-300 flex flex-col items-center pointer-events-none z-20" style="left: 20%;">
-            <div class="bg-blue-600 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow border border-blue-400 font-bold whitespace-nowrap mb-0.5">
-              Root: <span id="pinRootText">--</span>
-            </div>
-            <div class="w-0.5 h-3 bg-blue-500"></div>
-            <div class="w-3 h-3 rounded-full bg-blue-500 border border-white shadow -mt-1"></div>
+          <!-- Target Marker -->
+          <div id="pin-target" class="absolute -translate-x-1/2 flex flex-col items-center z-10" style="left: 75%;">
+            <span class="text-[9px] font-bold text-emerald-400 bg-emerald-950 px-1 rounded border border-emerald-800">Target</span>
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 mt-0.5 border border-white shadow-sm shadow-emerald-400"></div>
           </div>
 
-          <!-- Target Pin (Emerald Green) -->
-          <div id="pinTarget" class="absolute transition-all duration-300 flex flex-col items-center pointer-events-none z-30" style="left: 70%;">
-            <div class="bg-emerald-600 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow border border-emerald-400 font-bold whitespace-nowrap mb-0.5">
-              Target: <span id="pinTargetText">--</span>
-            </div>
-            <div class="w-0.5 h-3 bg-emerald-500"></div>
-            <div class="w-3.5 h-3.5 rounded-full bg-emerald-500 border border-white shadow -mt-1 animate-pulse"></div>
+          <!-- User Marker -->
+          <div id="pin-user" class="absolute -translate-x-1/2 flex flex-col items-center z-20" style="left: 78%;">
+            <span class="text-[9px] font-bold text-amber-300 bg-amber-950 px-1 rounded border border-amber-800">You</span>
+            <div class="w-3 h-3 rounded-full bg-amber-400 mt-0.5 border border-white shadow-md shadow-amber-400 animate-pulse"></div>
           </div>
-
-          <!-- User Choice Pin (Amber) -->
-          <div id="pinUser" class="absolute transition-all duration-300 flex flex-col-reverse items-center pointer-events-none z-30" style="left: 50%;">
-            <div class="bg-amber-600 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow border border-amber-400 font-bold whitespace-nowrap mt-0.5">
-              You: <span id="pinUserText">--</span>
-            </div>
-            <div class="w-0.5 h-3 bg-amber-500"></div>
-            <div class="w-3.5 h-3.5 rounded-full bg-amber-500 border border-white shadow -mb-1"></div>
-          </div>
-
         </div>
 
-        <div id="ratingText" class="text-[10px] font-semibold text-center text-gray-400 mt-0.5">
-          Tune slider by ear and press Verify!
+        <!-- AUDIO COMPARISON BUTTONS -->
+        <div class="grid grid-cols-4 gap-1">
+          <button id="btn-replay-root" class="py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-indigo-900 text-indigo-300 rounded text-[11px] font-bold border border-slate-700">Root</button>
+          <button id="btn-replay-target" class="py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-emerald-900 text-emerald-300 rounded text-[11px] font-bold border border-slate-700">Target</button>
+          <button id="btn-replay-user" class="py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-amber-900 text-amber-300 rounded text-[11px] font-bold border border-slate-700">Yours</button>
+          <button id="btn-play-chord" class="py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-purple-900 text-purple-300 rounded text-[11px] font-bold border border-slate-700">Chord</button>
         </div>
-
       </div>
-
-      <!-- Post Verification Audio Replay Options -->
-      <div id="replaySection" class="grid grid-cols-4 gap-1 opacity-50 pointer-events-none transition-all duration-300">
-        <button id="playRootPostBtn" class="py-1.5 px-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-[10px] rounded-lg border border-gray-700 flex items-center justify-center gap-1 transition">
-          <i class="fa-solid fa-anchor text-indigo-400 text-[9px]"></i> Root
-        </button>
-
-        <button id="playMyPostBtn" class="py-1.5 px-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-[10px] rounded-lg border border-gray-700 flex items-center justify-center gap-1 transition">
-          <i class="fa-solid fa-user text-amber-400 text-[9px]"></i> Mine
-        </button>
-
-        <button id="playTargetPostBtn" class="py-1.5 px-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-[10px] rounded-lg border border-gray-700 flex items-center justify-center gap-1 transition">
-          <i class="fa-solid fa-bullseye text-emerald-400 text-[9px]"></i> Target
-        </button>
-
-        <button id="playIntervalTargetBtn" class="py-1.5 px-1 bg-indigo-950 hover:bg-indigo-900 text-indigo-200 text-[10px] rounded-lg border border-indigo-800 flex items-center justify-center gap-1 transition">
-          <i class="fa-solid fa-layer-group text-indigo-400 text-[9px]"></i> Chord
-        </button>
-      </div>
-
     </section>
-
   </main>
 
-  <!-- SLIDE-UP SESSION HISTORY DRAWER -->
-  <div id="historyDrawer" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 transition-opacity opacity-0 pointer-events-none flex flex-col justify-end">
-    <div id="historyDrawerContent" class="bg-gray-900 border-t border-gray-800 rounded-t-2xl p-4 max-h-[70vh] flex flex-col transform translate-y-full transition-transform duration-300">
-      <div class="flex items-center justify-between pb-3 border-b border-gray-800">
-        <h3 class="text-xs font-bold text-gray-200 uppercase tracking-wider flex items-center gap-1.5">
-          <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> Practice Session Log
-        </h3>
-        <div class="flex items-center gap-3">
-          <button id="clearHistoryBtn" class="text-[11px] text-gray-400 hover:text-gray-200">Clear</button>
-          <button id="closeHistoryBtn" class="w-7 h-7 rounded-full bg-gray-800 text-gray-400 flex items-center justify-center text-xs">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
+  <!-- SETTINGS MODAL DIALOG -->
+  <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 w-full max-w-sm shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <h2 class="text-base font-bold text-white flex items-center space-x-1.5">
+          <span>⚙️</span>
+          <span>Trainer Settings</span>
+        </h2>
+        <button id="btn-close-settings" class="text-slate-400 hover:text-white text-lg font-bold p-1">✕</button>
+      </div>
+
+      <!-- ROOT NOTE SELECTOR -->
+      <div class="space-y-1">
+        <div class="flex justify-between items-center">
+          <label class="text-xs font-semibold text-slate-300">Root Note</label>
+          <button id="btn-random-root-now" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2 py-0.5 rounded border border-slate-700">🎲 Pick Random</button>
+        </div>
+        <select id="select-root" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-indigo-500">
+          <!-- Populated by JS -->
+        </select>
+      </div>
+
+      <!-- RANDOM ROOT TOGGLE -->
+      <div class="flex justify-between items-center pt-1">
+        <span class="text-xs text-slate-300 font-medium">Random Root Each Round</span>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="toggle-random-root" class="sr-only peer" checked>
+          <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+        </label>
+      </div>
+
+      <!-- INTERVAL SELECTOR -->
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-slate-300">Target Interval</label>
+        <select id="select-interval" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-indigo-500">
+          <!-- Populated by JS -->
+        </select>
+      </div>
+
+      <!-- DIRECTION SELECTOR -->
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-slate-300">Interval Direction</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-dir-up" class="py-2 bg-indigo-600 text-white font-bold text-xs rounded-lg border border-indigo-500">Up ↗</button>
+          <button id="btn-dir-down" class="py-2 bg-slate-800 text-slate-400 font-bold text-xs rounded-lg border border-slate-700">Down ↘</button>
         </div>
       </div>
 
-      <div class="overflow-y-auto flex-1 my-2">
-        <table class="w-full text-left text-xs font-mono text-gray-300">
-          <thead class="bg-gray-950 text-gray-500 uppercase text-[9px] sticky top-0">
-            <tr>
-              <th class="py-1.5 px-2">#</th>
-              <th class="py-1.5 px-2">Root</th>
-              <th class="py-1.5 px-2">Interval</th>
-              <th class="py-1.5 px-2">Target</th>
-              <th class="py-1.5 px-2">Mine</th>
-              <th class="py-1.5 px-2">Error</th>
-            </tr>
-          </thead>
-          <tbody id="historyTableBody" class="divide-y divide-gray-800/60 text-[11px]">
-            <tr>
-              <td colspan="6" class="py-4 text-center text-gray-500 font-sans italic">No attempts verified yet.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <!-- SAVE / APPLY BUTTON -->
+      <button id="btn-save-settings" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all">
+        Apply & Close
+      </button>
     </div>
   </div>
 
   <script>
-    const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    
-    const INTERVAL_NAMES = {
-      "0": "Unison", "1": "Min 2nd", "2": "Maj 2nd", "3": "Min 3rd",
-      "4": "Maj 3rd", "5": "Perf 4th", "6": "Tritone", "7": "Perf 5th",
-      "8": "Min 6th", "9": "Maj 6th", "10": "Min 7th", "11": "Maj 7th", "12": "Octave"
+    // --- 1. DATA DEFINITIONS ---
+    const CHROMATIC_NOTES = [
+      { name: 'C3', freq: 130.81 }, { name: 'C#3', freq: 138.59 }, { name: 'D3', freq: 146.83 },
+      { name: 'D#3', freq: 155.56 }, { name: 'E3', freq: 164.81 }, { name: 'F3', freq: 174.61 },
+      { name: 'F#3', freq: 185.00 }, { name: 'G3', freq: 196.00 }, { name: 'G#3', freq: 207.65 },
+      { name: 'A3', freq: 220.00 }, { name: 'A#3', freq: 233.08 }, { name: 'B3', freq: 246.94 },
+      { name: 'C4', freq: 261.63 }, { name: 'C#4', freq: 277.18 }, { name: 'D4', freq: 293.66 }
+    ];
+
+    const INTERVALS = [
+      { name: 'Unison / Octave', semitones: 0 },
+      { name: 'Minor 2nd', semitones: 1 },
+      { name: 'Major 2nd', semitones: 2 },
+      { name: 'Minor 3rd', semitones: 3 },
+      { name: 'Major 3rd', semitones: 4 },
+      { name: 'Perfect 4th', semitones: 5 },
+      { name: 'Tritone', semitones: 6 },
+      { name: 'Perfect 5th', semitones: 7 },
+      { name: 'Minor 6th', semitones: 8 },
+      { name: 'Major 6th', semitones: 9 },
+      { name: 'Minor 7th', semitones: 10 },
+      { name: 'Major 7th', semitones: 11 },
+      { name: 'Octave', semitones: 12 }
+    ];
+
+    // --- 2. APPLICATION STATE ---
+    let state = {
+      rootIndex: 12, // Default C4
+      intervalIndex: 7, // Perfect 5th
+      direction: 'up', // 'up' or 'down'
+      randomizeRoot: true, // Random root per round
+      targetHz: 392.0,
+      userPitchHz: 350.0,
+      minSliderHz: 200.0,
+      maxSliderHz: 500.0,
+      verified: false
     };
 
-    // State Variables
+    // --- 3. WEB AUDIO SYNTHESIS ENGINE ---
     let audioCtx = null;
-    let masterGain = null;
+    let rootDroneOsc = null;
+    let rootDroneGain = null;
+    let userDroneOsc = null;
+    let userDroneGain = null;
 
-    // Continuous Drones
-    let rootDroneOsc1 = null, rootDroneOsc2 = null, rootDroneGain = null;
-    let sliderDroneOsc1 = null, sliderDroneOsc2 = null, sliderDroneGain = null;
-
-    // Pitch Math State
-    let rootMidi = 60; // C4
-    let rootFreq = 261.63;
-    let intervalSemitones = 7; // Perfect 5th
-    let isAscending = true;
-    let targetFreq = 392.00; // G4
-
-    let coarseCents = 0;
-    let fineCents = 0;
-    let userTotalCents = 0;
-    let userFreq = 261.63;
-
-    let isVerified = false;
-    let historyLog = [];
-
-    function unlockAudioContext() {
+    function getAudioContext() {
       if (!audioCtx) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        audioCtx = new AudioContext();
-
-        masterGain = audioCtx.createGain();
-        masterGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-        masterGain.connect(audioCtx.destination);
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
-
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
-
-      const banner = document.getElementById('audioUnlockBanner');
-      if (banner) banner.style.display = 'none';
+      return audioCtx;
     }
 
-    function midiToFreq(midi) {
-      return 440 * Math.pow(2, (midi - 69) / 12);
+    // Unlock Web Audio Context on early user gesture
+    function unlockAudio() {
+      try {
+        const ctx = getAudioContext();
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume();
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
 
-    function freqToNoteInfo(freq) {
-      const midiExact = 69 + 12 * Math.log2(freq / 440);
-      const midiRounded = Math.round(midiExact);
-      const centsOffset = (midiExact - midiRounded) * 100;
-      
-      const noteIndex = (midiRounded % 12 + 12) % 12;
-      const octave = Math.floor(midiRounded / 12) - 1;
-      const noteName = `${NOTE_NAMES[noteIndex]}${octave}`;
+    function playPing(frequency, type = 'sine', duration = 0.5) {
+      try {
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') ctx.resume();
 
-      return {
-        noteName,
-        midiRounded,
-        centsOffset: Math.round(centsOffset * 10) / 10
-      };
-    }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
 
-    function playNotePing(frequency, duration = 1.1, vol = 0.6) {
-      unlockAudioContext();
-      if (!audioCtx) return;
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, ctx.currentTime);
 
-      const now = audioCtx.currentTime;
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(frequency * 3, ctx.currentTime);
 
-      const osc1 = audioCtx.createOscillator(); // Triangle tone body
-      const osc2 = audioCtx.createOscillator(); // Sine fundamental
-      const gain = audioCtx.createGain();
-      const filter = audioCtx.createBiquadFilter();
+        const now = ctx.currentTime;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.3, now + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(1400, now);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
 
-      osc1.type = "triangle";
-      osc1.frequency.setValueAtTime(frequency, now);
-
-      osc2.type = "sine";
-      osc2.frequency.setValueAtTime(frequency, now);
-
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(vol * 0.5, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(vol * 0.3, now + 0.15);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-      osc1.connect(filter);
-      osc2.connect(filter);
-      filter.connect(gain);
-      gain.connect(masterGain);
-
-      osc1.start(now);
-      osc2.start(now);
-      osc1.stop(now + duration + 0.1);
-      osc2.stop(now + duration + 0.1);
-    }
-
-    function playIntervalChord(freq1, freq2, duration = 1.5) {
-      playNotePing(freq1, duration, 0.45);
-      playNotePing(freq2, duration, 0.45);
+        osc.start(now);
+        osc.stop(now + duration);
+      } catch(e) { console.error(e); }
     }
 
     function toggleRootDrone(enable) {
-      unlockAudioContext();
-      if (!audioCtx) return;
-
+      const ctx = getAudioContext();
       if (enable) {
-        if (!rootDroneOsc1) {
-          rootDroneOsc1 = audioCtx.createOscillator();
-          rootDroneOsc2 = audioCtx.createOscillator();
-          rootDroneGain = audioCtx.createGain();
-          const filter = audioCtx.createBiquadFilter();
+        if (rootDroneOsc) stopRootDrone();
+        rootDroneOsc = ctx.createOscillator();
+        rootDroneGain = ctx.createGain();
+        const rootHz = CHROMATIC_NOTES[state.rootIndex].freq;
 
-          filter.type = "lowpass";
-          filter.frequency.setValueAtTime(1200, audioCtx.currentTime);
+        rootDroneOsc.type = 'triangle';
+        rootDroneOsc.frequency.setValueAtTime(rootHz, ctx.currentTime);
 
-          rootDroneOsc1.type = "triangle";
-          rootDroneOsc1.frequency.setValueAtTime(rootFreq, audioCtx.currentTime);
+        rootDroneGain.gain.setValueAtTime(0, ctx.currentTime);
+        rootDroneGain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.1);
 
-          rootDroneOsc2.type = "sine";
-          rootDroneOsc2.frequency.setValueAtTime(rootFreq, audioCtx.currentTime);
-
-          rootDroneGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-          rootDroneGain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.15);
-
-          rootDroneOsc1.connect(filter);
-          rootDroneOsc2.connect(filter);
-          filter.connect(rootDroneGain);
-          rootDroneGain.connect(masterGain);
-
-          rootDroneOsc1.start();
-          rootDroneOsc2.start();
-        } else {
-          rootDroneOsc1.frequency.setTargetAtTime(rootFreq, audioCtx.currentTime, 0.02);
-          rootDroneOsc2.frequency.setTargetAtTime(rootFreq, audioCtx.currentTime, 0.02);
-          rootDroneGain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.1);
-        }
+        rootDroneOsc.connect(rootDroneGain);
+        rootDroneGain.connect(ctx.destination);
+        rootDroneOsc.start();
       } else {
-        if (rootDroneGain) {
-          rootDroneGain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
-          setTimeout(() => {
-            if (rootDroneOsc1 && !document.getElementById('rootDroneToggle').checked) {
-              rootDroneOsc1.stop();
-              rootDroneOsc2.stop();
-              rootDroneOsc1.disconnect();
-              rootDroneOsc2.disconnect();
-              rootDroneOsc1 = null;
-              rootDroneOsc2 = null;
-              rootDroneGain = null;
-            }
-          }, 120);
-        }
+        stopRootDrone();
       }
     }
 
-    function toggleSliderDrone(enable) {
-      unlockAudioContext();
-      if (!audioCtx) return;
+    function stopRootDrone() {
+      if (rootDroneGain && audioCtx) {
+        rootDroneGain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+        setTimeout(() => {
+          if (rootDroneOsc) { rootDroneOsc.stop(); rootDroneOsc = null; }
+        }, 100);
+      } else if (rootDroneOsc) {
+        rootDroneOsc.stop();
+        rootDroneOsc = null;
+      }
+      document.getElementById('toggle-root-drone').checked = false;
+    }
 
+    function toggleUserDrone(enable) {
+      const ctx = getAudioContext();
       if (enable) {
-        if (!sliderDroneOsc1) {
-          sliderDroneOsc1 = audioCtx.createOscillator();
-          sliderDroneOsc2 = audioCtx.createOscillator();
-          sliderDroneGain = audioCtx.createGain();
-          const filter = audioCtx.createBiquadFilter();
+        if (userDroneOsc) stopUserDrone();
+        userDroneOsc = ctx.createOscillator();
+        userDroneGain = ctx.createGain();
 
-          filter.type = "lowpass";
-          filter.frequency.setValueAtTime(1200, audioCtx.currentTime);
+        userDroneOsc.type = 'sine';
+        userDroneOsc.frequency.setValueAtTime(state.userPitchHz, ctx.currentTime);
 
-          sliderDroneOsc1.type = "triangle";
-          sliderDroneOsc1.frequency.setValueAtTime(userFreq, audioCtx.currentTime);
+        userDroneGain.gain.setValueAtTime(0, ctx.currentTime);
+        userDroneGain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.1);
 
-          sliderDroneOsc2.type = "sine";
-          sliderDroneOsc2.frequency.setValueAtTime(userFreq, audioCtx.currentTime);
-
-          sliderDroneGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-          sliderDroneGain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.15);
-
-          sliderDroneOsc1.connect(filter);
-          sliderDroneOsc2.connect(filter);
-          filter.connect(sliderDroneGain);
-          sliderDroneGain.connect(masterGain);
-
-          sliderDroneOsc1.start();
-          sliderDroneOsc2.start();
-        } else {
-          sliderDroneOsc1.frequency.setTargetAtTime(userFreq, audioCtx.currentTime, 0.015);
-          sliderDroneOsc2.frequency.setTargetAtTime(userFreq, audioCtx.currentTime, 0.015);
-          sliderDroneGain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.1);
-        }
+        userDroneOsc.connect(userDroneGain);
+        userDroneGain.connect(ctx.destination);
+        userDroneOsc.start();
       } else {
-        if (sliderDroneGain) {
-          sliderDroneGain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
-          setTimeout(() => {
-            if (sliderDroneOsc1 && !document.getElementById('sliderDroneToggle').checked) {
-              sliderDroneOsc1.stop();
-              sliderDroneOsc2.stop();
-              sliderDroneOsc1.disconnect();
-              sliderDroneOsc2.disconnect();
-              sliderDroneOsc1 = null;
-              sliderDroneOsc2 = null;
-              sliderDroneGain = null;
-            }
-          }, 120);
-        }
+        stopUserDrone();
       }
     }
 
-    function updateSliderDroneFreq() {
-      if (sliderDroneOsc1 && audioCtx) {
-        sliderDroneOsc1.frequency.setTargetAtTime(userFreq, audioCtx.currentTime, 0.015);
-        sliderDroneOsc2.frequency.setTargetAtTime(userFreq, audioCtx.currentTime, 0.015);
+    function updateUserDroneFreq() {
+      if (userDroneOsc && audioCtx) {
+        userDroneOsc.frequency.setValueAtTime(state.userPitchHz, audioCtx.currentTime);
       }
     }
 
-    function populateRootDropdown() {
-      const select = document.getElementById('rootNoteSelect');
-      select.innerHTML = '';
-
-      for (let midi = 48; midi <= 72; midi++) {
-        const freq = midiToFreq(midi);
-        const info = freqToNoteInfo(freq);
-        const opt = document.createElement('option');
-        opt.value = midi;
-        opt.textContent = `${info.noteName} (${freq.toFixed(1)} Hz)`;
-        if (midi === 60) opt.selected = true;
-        select.appendChild(opt);
+    function stopUserDrone() {
+      if (userDroneGain && audioCtx) {
+        userDroneGain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+        setTimeout(() => {
+          if (userDroneOsc) { userDroneOsc.stop(); userDroneOsc = null; }
+        }, 100);
+      } else if (userDroneOsc) {
+        userDroneOsc.stop();
+        userDroneOsc = null;
       }
+      document.getElementById('toggle-user-drone').checked = false;
     }
 
-    function setRootFromMidi(midi) {
-      rootMidi = parseInt(midi, 10);
-      rootFreq = midiToFreq(rootMidi);
-
-      document.getElementById('rootFreqText').innerText = `${rootFreq.toFixed(1)} Hz`;
-      document.getElementById('rootOctaveTag').innerText = `MIDI ${rootMidi}`;
-
-      if (rootDroneOsc1 && audioCtx) {
-        rootDroneOsc1.frequency.setTargetAtTime(rootFreq, audioCtx.currentTime, 0.02);
-        rootDroneOsc2.frequency.setTargetAtTime(rootFreq, audioCtx.currentTime, 0.02);
-      }
-
-      randomizeUserPitch();
-      recalculateTarget();
-      resetVerification();
-      renderLinearAxis();
+    function stopAllAudio() {
+      stopRootDrone();
+      stopUserDrone();
     }
 
-    function generateNewRootNote() {
-      const minMidi = 48;
-      const maxMidi = 72;
-      const newMidi = Math.floor(Math.random() * (maxMidi - minMidi + 1)) + minMidi;
-      
-      document.getElementById('rootNoteSelect').value = newMidi;
-      setRootFromMidi(newMidi);
+    // --- 4. GAME LOGIC & CALCULATION ---
+    function calculateTarget() {
+      const rootHz = CHROMATIC_NOTES[state.rootIndex].freq;
+      const semitones = INTERVALS[state.intervalIndex].semitones;
+      const mult = Math.pow(2, (state.direction === 'up' ? semitones : -semitones) / 12);
+      state.targetHz = rootHz * mult;
+
+      // Constrain slider bounds to +/- 600 cents (6 semitones) around target
+      state.minSliderHz = state.targetHz * Math.pow(2, -600 / 1200);
+      state.maxSliderHz = state.targetHz * Math.pow(2, 600 / 1200);
     }
 
-    function recalculateTarget() {
-      const shift = isAscending ? intervalSemitones : -intervalSemitones;
-      targetFreq = rootFreq * Math.pow(2, shift / 12);
+    function randomizeRoot() {
+      state.rootIndex = Math.floor(Math.random() * CHROMATIC_NOTES.length);
+      const selectRoot = document.getElementById('select-root');
+      if (selectRoot) selectRoot.value = state.rootIndex;
     }
 
-    function randomizeUserPitch() {
-      // Offset coarse slider randomly
-      const randomCoarse = Math.floor(Math.random() * 2000) - 1000;
-      const randomFine = Math.floor(Math.random() * 80) - 40;
+    function nextRound() {
+      stopAllAudio();
+      state.verified = false;
 
-      document.getElementById('coarseSlider').value = randomCoarse;
-      document.getElementById('fineSlider').value = randomFine;
-
-      updateUserPitchFromUI();
-    }
-
-    function updateUserPitchFromUI() {
-      coarseCents = parseFloat(document.getElementById('coarseSlider').value);
-      fineCents = parseFloat(document.getElementById('fineSlider').value);
-
-      document.getElementById('fineCentsLabel').innerText = `${fineCents >= 0 ? '+' : ''}${fineCents.toFixed(1)}c`;
-
-      userTotalCents = coarseCents + fineCents;
-      userFreq = rootFreq * Math.pow(2, userTotalCents / 1200);
-
-      updateSliderDroneFreq();
-
-      if (isVerified) {
-        const info = freqToNoteInfo(userFreq);
-        document.getElementById('revealedUserFreq').innerText = `${userFreq.toFixed(1)} Hz`;
-        document.getElementById('revealedUserNote').innerText = info.noteName;
-        renderLinearAxis();
-      }
-    }
-
-    function resetVerification() {
-      isVerified = false;
-
-      document.getElementById('unverifiedReadout').classList.remove('hidden');
-      document.getElementById('verifiedReadout').classList.add('hidden');
-
-      const centsBadge = document.getElementById('centsBadge');
-      centsBadge.className = "text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-gray-800 text-gray-400 border border-gray-700";
-      centsBadge.innerText = "Unverified";
-
-      document.getElementById('ratingText').innerText = "Tune pitch slider by ear and tap Verify!";
-
-      const replaySec = document.getElementById('replaySection');
-      replaySec.classList.add('opacity-50', 'pointer-events-none');
-
-      renderLinearAxis();
-    }
-
-    function renderLinearAxis() {
-      const targetCents = (isAscending ? 1 : -1) * intervalSemitones * 100;
-      const currentCents = userTotalCents;
-
-      const minVal = Math.min(0, targetCents, currentCents);
-      const maxVal = Math.max(0, targetCents, currentCents);
-      const span = maxVal - minVal;
-
-      const padding = Math.max(200, span * 0.25);
-      const axisMin = minVal - padding;
-      const axisMax = maxVal + padding;
-      const axisSpan = axisMax - axisMin;
-
-      const getPct = (c) => Math.max(4, Math.min(96, ((c - axisMin) / axisSpan) * 100));
-
-      const rootPct = getPct(0);
-      const targetPct = getPct(targetCents);
-      const userPct = getPct(currentCents);
-
-      const pinRoot = document.getElementById('pinRoot');
-      const pinTarget = document.getElementById('pinTarget');
-      const pinUser = document.getElementById('pinUser');
-
-      pinRoot.style.left = `${rootPct}%`;
-      pinTarget.style.left = `${targetPct}%`;
-      pinUser.style.left = `${userPct}%`;
-
-      const rootInfo = freqToNoteInfo(rootFreq);
-      const targetInfo = freqToNoteInfo(targetFreq);
-      const userInfo = freqToNoteInfo(userFreq);
-
-      document.getElementById('pinRootText').innerText = `${rootInfo.noteName}`;
-      document.getElementById('pinTargetText').innerText = `${targetInfo.noteName}`;
-
-      if (isVerified) {
-        document.getElementById('pinUserText').innerText = `${userInfo.noteName}`;
-        pinUser.style.opacity = '1';
-      } else {
-        document.getElementById('pinUserText').innerText = 'Hidden';
-        pinUser.style.opacity = '0.7';
+      if (state.randomizeRoot) {
+        randomizeRoot();
       }
 
-      // Chromatic ticks
-      const ticksLayer = document.getElementById('axisTicksLayer');
-      ticksLayer.innerHTML = '';
+      calculateTarget();
 
-      const startSemitone = Math.floor(axisMin / 100);
-      const endSemitone = Math.ceil(axisMax / 100);
+      // Randomize initial user slider pitch offset (-350 to +350 cents)
+      let offsetCents = (Math.random() > 0.5 ? 1 : -1) * (100 + Math.random() * 250);
+      state.userPitchHz = state.targetHz * Math.pow(2, offsetCents / 1200);
 
-      for (let st = startSemitone; st <= endSemitone; st++) {
-        const cVal = st * 100;
-        const pct = getPct(cVal);
+      updateSliderUIFromHz();
+      updateUI();
+    }
 
-        if (pct >= 3 && pct <= 97) {
-          const tickEl = document.createElement('div');
-          tickEl.className = 'absolute flex flex-col items-center pointer-events-none transform -translate-x-1/2';
-          tickEl.style.left = `${pct}%`;
-          tickEl.style.top = '32%';
+    function hzToSliderValue(hz) {
+      const ratio = (Math.log2(hz) - Math.log2(state.minSliderHz)) / (Math.log2(state.maxSliderHz) - Math.log2(state.minSliderHz));
+      return Math.round(Math.max(0, Math.min(1000, ratio * 1000)));
+    }
 
-          tickEl.innerHTML = `<div class="w-0.5 h-2 bg-gray-700"></div>`;
-          ticksLayer.appendChild(tickEl);
-        }
-      }
+    function sliderValueToHz(val) {
+      const ratio = val / 1000;
+      const logMin = Math.log2(state.minSliderHz);
+      const logMax = Math.log2(state.maxSliderHz);
+      return Math.pow(2, logMin + ratio * (logMax - logMin));
+    }
 
-      // Highlight Error Span
-      const errorHighlight = document.getElementById('axisErrorHighlight');
-      if (isVerified) {
-        const leftPct = Math.min(targetPct, userPct);
-        const widthPct = Math.abs(targetPct - userPct);
-        const centsError = Math.abs(1200 * Math.log2(userFreq / targetFreq));
+    function updateSliderUIFromHz() {
+      const val = hzToSliderValue(state.userPitchHz);
+      document.getElementById('pitch-slider').value = val;
+    }
 
-        errorHighlight.style.left = `${leftPct}%`;
-        errorHighlight.style.width = `${Math.max(1, widthPct)}%`;
-
-        if (centsError <= 10) {
-          errorHighlight.className = "absolute h-full transition-all duration-300 bg-emerald-500 shadow-md shadow-emerald-500/50";
-        } else if (centsError <= 25) {
-          errorHighlight.className = "absolute h-full transition-all duration-300 bg-amber-500 shadow-md shadow-amber-500/50";
-        } else {
-          errorHighlight.className = "absolute h-full transition-all duration-300 bg-red-500 shadow-md shadow-red-500/50";
-        }
-      } else {
-        errorHighlight.style.width = '0%';
-      }
+    function adjustUserPitchCents(cents) {
+      state.userPitchHz = state.userPitchHz * Math.pow(2, cents / 1200);
+      state.userPitchHz = Math.max(state.minSliderHz, Math.min(state.maxSliderHz, state.userPitchHz));
+      updateSliderUIFromHz();
+      updateUserDroneFreq();
+      playPing(state.userPitchHz, 'sine', 0.4);
+      if (state.verified) renderResults();
     }
 
     function verifyPitch() {
-      unlockAudioContext();
-
-      isVerified = true;
-
-      const centsError = 1200 * Math.log2(userFreq / targetFreq);
-      const absCentsError = Math.abs(centsError);
-
-      const userInfo = freqToNoteInfo(userFreq);
-      const targetInfo = freqToNoteInfo(targetFreq);
-
-      document.getElementById('unverifiedReadout').classList.add('hidden');
-      document.getElementById('verifiedReadout').classList.remove('hidden');
-
-      document.getElementById('revealedUserFreq').innerText = `${userFreq.toFixed(1)} Hz`;
-      document.getElementById('revealedUserNote').innerText = userInfo.noteName;
-      document.getElementById('targetFreqRevealed').innerText = `${targetFreq.toFixed(1)} Hz (${targetInfo.noteName})`;
-
-      let ratingMsg = "";
-      let badgeStyle = "";
-
-      if (absCentsError <= 5) {
-        ratingMsg = "PERFECT PITCH! Exceptional accuracy! 🎯";
-        badgeStyle = "bg-emerald-500/20 text-emerald-300 border-emerald-500/50";
-      } else if (absCentsError <= 15) {
-        ratingMsg = "EXCELLENT! Very close match. 🌟";
-        badgeStyle = "bg-emerald-500/20 text-emerald-300 border-emerald-500/40";
-      } else if (absCentsError <= 30) {
-        ratingMsg = "GOOD EFFORT! Respectable pitch match. 👍";
-        badgeStyle = "bg-amber-500/20 text-amber-300 border-amber-500/40";
-      } else {
-        ratingMsg = "KEEP PRACTICING! Listen for harmonic beat resonances.";
-        badgeStyle = "bg-red-500/20 text-red-300 border-red-500/40";
-      }
-
-      const centsBadge = document.getElementById('centsBadge');
-      centsBadge.className = `text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${badgeStyle}`;
-      centsBadge.innerText = `${centsError >= 0 ? '+' : ''}${centsError.toFixed(1)}c Offset`;
-
-      document.getElementById('ratingText').innerText = ratingMsg;
-
-      document.getElementById('replaySection').classList.remove('opacity-50', 'pointer-events-none');
-
-      renderLinearAxis();
-      addHistoryRecord(rootMidi, intervalSemitones, isAscending, targetFreq, userFreq, centsError);
-      playNotePing(targetFreq, 0.8, 0.8);
+      stopAllAudio();
+      state.verified = true;
+      renderResults();
+      playPing(state.targetHz, 'sine', 0.6);
     }
 
-    function addHistoryRecord(rMidi, semitones, ascending, targetF, userF, centsErr) {
-      const record = {
-        id: historyLog.length + 1,
-        rootName: freqToNoteInfo(midiToFreq(rMidi)).noteName,
-        intervalName: `${INTERVAL_NAMES[semitones.toString()] || semitones + 'st'} (${ascending ? 'UP' : 'DN'})`,
-        targetFreq: targetF.toFixed(1),
-        userFreq: userF.toFixed(1),
-        errorCents: centsErr.toFixed(1),
-        absError: Math.abs(centsErr)
+    function renderResults() {
+      document.getElementById('result-unverified').classList.add('hidden');
+      document.getElementById('result-verified').classList.remove('hidden');
+      document.getElementById('result-verified').classList.add('flex');
+
+      document.getElementById('btn-verify').classList.add('hidden');
+      document.getElementById('btn-next-round').classList.remove('hidden');
+
+      const centsOff = Math.round(1200 * Math.log2(state.userPitchHz / state.targetHz));
+      const absCents = Math.abs(centsOff);
+
+      let rating = "Bullseye! 🎯";
+      let ratingColor = "text-emerald-400";
+      if (absCents > 5 && absCents <= 15) { rating = "Great Ear! 👏"; ratingColor = "text-emerald-400"; }
+      else if (absCents > 15 && absCents <= 35) { rating = "Very Close! 👍"; ratingColor = "text-amber-400"; }
+      else if (absCents > 35) { rating = "Keep Practicing! 👂"; ratingColor = "text-rose-400"; }
+
+      const scoreEl = document.getElementById('accuracy-score');
+      scoreEl.textContent = rating;
+      scoreEl.className = `text-sm font-extrabold ${ratingColor}`;
+
+      document.getElementById('cents-error').textContent = `${centsOff >= 0 ? '+' : ''}${centsOff} Cents Off`;
+      document.getElementById('target-hz-text').textContent = `Target: ${state.targetHz.toFixed(1)} Hz`;
+      document.getElementById('user-hz-text').textContent = `Yours: ${state.userPitchHz.toFixed(1)} Hz`;
+      document.getElementById('display-user-hz').textContent = `${state.userPitchHz.toFixed(1)} Hz`;
+
+      // Render Linear Pitch Axis Track Markers
+      const rootHz = CHROMATIC_NOTES[state.rootIndex].freq;
+      const minValHz = Math.min(rootHz, state.targetHz, state.userPitchHz) * Math.pow(2, -150/1200);
+      const maxValHz = Math.max(rootHz, state.targetHz, state.userPitchHz) * Math.pow(2, 150/1200);
+
+      const hzToTrackPct = (hz) => {
+        const r = (Math.log2(hz) - Math.log2(minValHz)) / (Math.log2(maxValHz) - Math.log2(minValHz));
+        return Math.max(8, Math.min(92, r * 100));
       };
 
-      historyLog.unshift(record);
-      renderHistoryTable();
+      const rootPct = hzToTrackPct(rootHz);
+      const targetPct = hzToTrackPct(state.targetHz);
+      const userPct = hzToTrackPct(state.userPitchHz);
+
+      document.getElementById('pin-root').style.left = `${rootPct}%`;
+      document.getElementById('pin-target').style.left = `${targetPct}%`;
+      document.getElementById('pin-user').style.left = `${userPct}%`;
+
+      // Highlight Error Line Gap
+      const errorLine = document.getElementById('axis-error-line');
+      const startPct = Math.min(targetPct, userPct);
+      const widthPct = Math.abs(targetPct - userPct);
+      errorLine.style.left = `${startPct}%`;
+      errorLine.style.width = `${widthPct}%`;
     }
 
-    function renderHistoryTable() {
-      const tbody = document.getElementById('historyTableBody');
-      if (historyLog.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-gray-500 font-sans italic">No attempts verified yet.</td></tr>`;
-        return;
+    function updateUI() {
+      const rootObj = CHROMATIC_NOTES[state.rootIndex];
+      const intervalObj = INTERVALS[state.intervalIndex];
+
+      document.getElementById('display-root-badge').textContent = `Root: ${rootObj.name}`;
+      document.getElementById('display-interval-name').textContent = intervalObj.name;
+      document.getElementById('display-direction-badge').textContent = state.direction.toUpperCase();
+
+      if (!state.verified) {
+        document.getElementById('result-unverified').classList.remove('hidden');
+        document.getElementById('result-verified').classList.add('hidden');
+        document.getElementById('result-verified').classList.remove('flex');
+
+        document.getElementById('btn-verify').classList.remove('hidden');
+        document.getElementById('btn-next-round').classList.add('hidden');
+        document.getElementById('display-user-hz').textContent = '??? Hz';
       }
-
-      tbody.innerHTML = historyLog.map(item => {
-        let errColor = "text-emerald-400";
-        if (item.absError > 25) errColor = "text-red-400";
-        else if (item.absError > 12) errColor = "text-amber-400";
-
-        return `
-          <tr class="hover:bg-gray-800/40 transition">
-            <td class="py-1.5 px-2 text-gray-500">#${item.id}</td>
-            <td class="py-1.5 px-2 text-indigo-300 font-bold">${item.rootName}</td>
-            <td class="py-1.5 px-2 text-gray-200">${item.intervalName}</td>
-            <td class="py-1.5 px-2 text-gray-400">${item.targetFreq}</td>
-            <td class="py-1.5 px-2 text-gray-400">${item.userFreq}</td>
-            <td class="py-1.5 px-2 font-bold ${errColor}">${item.errorCents > 0 ? '+' : ''}${item.errorCents}c</td>
-          </tr>
-        `;
-      }).join('');
     }
 
-    window.addEventListener('load', () => {
-      populateRootDropdown();
-
-      ['click', 'touchstart', 'pointerdown'].forEach(evt => {
-        document.body.addEventListener(evt, () => unlockAudioContext(), { once: true });
+    // --- 5. INITIALIZATION & EVENT LISTENERS ---
+    function initUI() {
+      // Global Audio Unlock Listeners
+      ['touchstart', 'pointerdown', 'click'].forEach(evt => {
+        document.body.addEventListener(evt, unlockAudio, { passive: true });
       });
 
-      document.getElementById('masterVolume').addEventListener('input', (e) => {
-        if (masterGain && audioCtx) {
-          masterGain.gain.setValueAtTime(parseFloat(e.target.value), audioCtx.currentTime);
-        }
+      // Populate Root Select
+      const selectRoot = document.getElementById('select-root');
+      selectRoot.innerHTML = '';
+      CHROMATIC_NOTES.forEach((note, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `${note.name} (${note.freq.toFixed(1)} Hz)`;
+        selectRoot.appendChild(opt);
       });
 
-      document.getElementById('rootNoteSelect').addEventListener('change', (e) => {
-        setRootFromMidi(e.target.value);
+      // Populate Interval Select
+      const selectInterval = document.getElementById('select-interval');
+      selectInterval.innerHTML = '';
+      INTERVALS.forEach((interval, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `${interval.name} (${interval.semitones} st)`;
+        selectInterval.appendChild(opt);
       });
+      selectInterval.value = state.intervalIndex;
 
-      document.getElementById('playRootPingBtn').addEventListener('click', () => playNotePing(rootFreq, 1.2));
+      // Start first round (randomizes root if checkbox enabled)
+      nextRound();
+    }
 
-      document.getElementById('randomRootBtn').addEventListener('click', () => {
-        generateNewRootNote();
-        playNotePing(rootFreq, 1.0);
-      });
+    // SLIDER TOUCH RELEASE PING LOGIC
+    let lastPingTime = 0;
+    function triggerReleasePing() {
+      unlockAudio();
+      const now = Date.now();
+      if (now - lastPingTime < 80) return;
+      lastPingTime = now;
+      
+      playPing(state.userPitchHz, 'sine', 0.45);
+    }
 
-      document.getElementById('rootDroneToggle').addEventListener('change', (e) => toggleRootDrone(e.target.checked));
-
-      document.getElementById('intervalSelect').addEventListener('change', (e) => {
-        intervalSemitones = parseInt(e.target.value, 10);
-        recalculateTarget();
-        resetVerification();
-      });
-
-      const dirUpBtn = document.getElementById('dirUpBtn');
-      const dirDownBtn = document.getElementById('dirDownBtn');
-
-      dirUpBtn.addEventListener('click', () => {
-        isAscending = true;
-        dirUpBtn.className = 'dir-btn py-1.5 bg-indigo-600 text-white font-bold text-[10px] rounded-lg border border-indigo-400/40 flex items-center justify-center gap-1 min-h-[36px]';
-        dirDownBtn.className = 'dir-btn py-1.5 bg-gray-800 text-gray-400 font-bold text-[10px] rounded-lg border border-gray-700 hover:bg-gray-700 flex items-center justify-center gap-1 min-h-[36px]';
-        recalculateTarget();
-        resetVerification();
-      });
-
-      dirDownBtn.addEventListener('click', () => {
-        isAscending = false;
-        dirDownBtn.className = 'dir-btn py-1.5 bg-indigo-600 text-white font-bold text-[10px] rounded-lg border border-indigo-400/40 flex items-center justify-center gap-1 min-h-[36px]';
-        dirUpBtn.className = 'dir-btn py-1.5 bg-gray-800 text-gray-400 font-bold text-[10px] rounded-lg border border-gray-700 hover:bg-gray-700 flex items-center justify-center gap-1 min-h-[36px]';
-        recalculateTarget();
-        resetVerification();
-      });
-
-      // Coarse & Fine Sliders
-      document.getElementById('coarseSlider').addEventListener('input', updateUserPitchFromUI);
-      document.getElementById('fineSlider').addEventListener('input', updateUserPitchFromUI);
-
-      // Fine tuning step buttons
-      document.querySelectorAll('.fine-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const delta = parseFloat(e.target.dataset.cents);
-          const fineSlider = document.getElementById('fineSlider');
-          let val = parseFloat(fineSlider.value);
-          val = Math.max(-100, Math.min(100, val + delta));
-          fineSlider.value = val;
-          updateUserPitchFromUI();
-        });
-      });
-
-      document.getElementById('playUserPitchPingBtn').addEventListener('click', () => playNotePing(userFreq, 1.2));
-      document.getElementById('sliderDroneToggle').addEventListener('change', (e) => toggleSliderDrone(e.target.checked));
-      document.getElementById('verifyPitchBtn').addEventListener('click', verifyPitch);
-
-      // Post-verification audio buttons
-      document.getElementById('playRootPostBtn').addEventListener('click', () => playNotePing(rootFreq, 1.2));
-      document.getElementById('playMyPostBtn').addEventListener('click', () => playNotePing(userFreq, 1.2));
-      document.getElementById('playTargetPostBtn').addEventListener('click', () => playNotePing(targetFreq, 1.2));
-      document.getElementById('playIntervalTargetBtn').addEventListener('click', () => playIntervalChord(rootFreq, targetFreq, 1.5));
-
-      // Session History Drawer Controls
-      const historyDrawer = document.getElementById('historyDrawer');
-      const historyContent = document.getElementById('historyDrawerContent');
-
-      document.getElementById('openHistoryBtn').addEventListener('click', () => {
-        historyDrawer.classList.remove('pointer-events-none', 'opacity-0');
-        historyContent.classList.remove('translate-y-full');
-      });
-
-      const closeDrawer = () => {
-        historyContent.classList.add('translate-y-full');
-        historyDrawer.classList.add('opacity-0', 'pointer-events-none');
-      };
-
-      document.getElementById('closeHistoryBtn').addEventListener('click', closeDrawer);
-      historyDrawer.addEventListener('click', (e) => {
-        if (e.target === historyDrawer) closeDrawer();
-      });
-
-      document.getElementById('clearHistoryBtn').addEventListener('click', () => {
-        historyLog = [];
-        renderHistoryTable();
-      });
-
-      // Initialize
-      setRootFromMidi(60);
+    const slider = document.getElementById('pitch-slider');
+    
+    slider.addEventListener('input', (e) => {
+      state.userPitchHz = sliderValueToHz(parseInt(e.target.value, 10));
+      updateUserDroneFreq();
+      if (state.verified) renderResults();
     });
+
+    // Dedicated Touch & Mouse Release Listeners for Slider
+    ['pointerup', 'touchend', 'mouseup', 'change'].forEach(evtType => {
+      slider.addEventListener(evtType, triggerReleasePing, { passive: true });
+    });
+
+    // Audio Pings & Drones
+    document.getElementById('btn-ping-root').addEventListener('click', () => {
+      playPing(CHROMATIC_NOTES[state.rootIndex].freq, 'triangle', 0.6);
+    });
+
+    document.getElementById('btn-ping-user').addEventListener('click', () => {
+      playPing(state.userPitchHz, 'sine', 0.5);
+    });
+
+    document.getElementById('toggle-root-drone').addEventListener('change', (e) => {
+      toggleRootDrone(e.target.checked);
+    });
+
+    document.getElementById('toggle-user-drone').addEventListener('change', (e) => {
+      toggleUserDrone(e.target.checked);
+    });
+
+    // Micro Tuning Buttons
+    document.getElementById('btn-fine-minus-10').addEventListener('click', () => adjustUserPitchCents(-10));
+    document.getElementById('btn-fine-minus-1').addEventListener('click', () => adjustUserPitchCents(-1));
+    document.getElementById('btn-fine-plus-1').addEventListener('click', () => adjustUserPitchCents(1));
+    document.getElementById('btn-fine-plus-10').addEventListener('click', () => adjustUserPitchCents(10));
+
+    // Verify & Next Round
+    document.getElementById('btn-verify').addEventListener('click', verifyPitch);
+    document.getElementById('btn-next-round').addEventListener('click', nextRound);
+
+    // Replay Comparison Buttons
+    document.getElementById('btn-replay-root').addEventListener('click', () => {
+      playPing(CHROMATIC_NOTES[state.rootIndex].freq, 'triangle', 0.6);
+    });
+    document.getElementById('btn-replay-target').addEventListener('click', () => {
+      playPing(state.targetHz, 'sine', 0.6);
+    });
+    document.getElementById('btn-replay-user').addEventListener('click', () => {
+      playPing(state.userPitchHz, 'sine', 0.6);
+    });
+    document.getElementById('btn-play-chord').addEventListener('click', () => {
+      playPing(CHROMATIC_NOTES[state.rootIndex].freq, 'triangle', 0.8);
+      setTimeout(() => playPing(state.userPitchHz, 'sine', 0.8), 50);
+    });
+
+    // Settings Modal Listeners
+    const modal = document.getElementById('settings-modal');
+    document.getElementById('btn-settings').addEventListener('click', () => {
+      modal.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-settings').addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+    document.getElementById('btn-save-settings').addEventListener('click', () => {
+      modal.classList.add('hidden');
+      calculateTarget();
+      updateSliderUIFromHz();
+      updateUI();
+    });
+
+    document.getElementById('select-root').addEventListener('change', (e) => {
+      state.rootIndex = parseInt(e.target.value, 10);
+    });
+    document.getElementById('select-interval').addEventListener('change', (e) => {
+      state.intervalIndex = parseInt(e.target.value, 10);
+    });
+    document.getElementById('btn-random-root-now').addEventListener('click', () => {
+      randomizeRoot();
+      calculateTarget();
+      updateSliderUIFromHz();
+      updateUI();
+      playPing(CHROMATIC_NOTES[state.rootIndex].freq, 'triangle', 0.5);
+    });
+    document.getElementById('toggle-random-root').addEventListener('change', (e) => {
+      state.randomizeRoot = e.target.checked;
+    });
+
+    document.getElementById('btn-dir-up').addEventListener('click', () => {
+      state.direction = 'up';
+      document.getElementById('btn-dir-up').className = 'py-2 bg-indigo-600 text-white font-bold text-xs rounded-lg border border-indigo-500';
+      document.getElementById('btn-dir-down').className = 'py-2 bg-slate-800 text-slate-400 font-bold text-xs rounded-lg border border-slate-700';
+    });
+    document.getElementById('btn-dir-down').addEventListener('click', () => {
+      state.direction = 'down';
+      document.getElementById('btn-dir-down').className = 'py-2 bg-indigo-600 text-white font-bold text-xs rounded-lg border border-indigo-500';
+      document.getElementById('btn-dir-up').className = 'py-2 bg-slate-800 text-slate-400 font-bold text-xs rounded-lg border border-slate-700';
+    });
+
+    // Initialize application when DOM is ready
+    window.addEventListener('DOMContentLoaded', initUI);
   </script>
 </body>
 </html>
